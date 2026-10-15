@@ -1,0 +1,2975 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ระบบจัดการวันลา โรงเรียนบ้านห้วยไคร้ สพป.สุโขทัย เขต 2</title>
+
+  <!-- Google Fonts: Prompt & Sarabun -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Sarabun:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            prompt: ['Prompt', 'sans-serif'],
+            sarabun: ['Sarabun', 'TH Sarabun New', 'sans-serif'],
+          },
+          colors: {
+            primary: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Font Awesome 6 CDN for clean vector icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <style>
+    body {
+      font-family: 'Prompt', sans-serif;
+      background-color: #f8fafc;
+      color: #1e293b;
+      -webkit-font-smoothing: antialiased;
+    }
+    .font-sarabun {
+      font-family: 'Sarabun', 'TH Sarabun New', sans-serif;
+    }
+    
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    /* Print Styles for Official A4 Leave Slip */
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 10mm 15mm 12mm 15mm;
+      }
+      body * {
+        visibility: hidden !important;
+      }
+      #official-print-container, #official-print-container * {
+        visibility: visible !important;
+      }
+      #official-print-container {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: white !important;
+        color: black !important;
+        display: block !important;
+        box-shadow: none !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- ========================================== -->
+  <!-- TOP HEADER & BRANDING                      -->
+  <!-- ========================================== -->
+  <header class="bg-gradient-to-r from-blue-900 via-indigo-900 to-blue-950 text-white shadow-md sticky top-0 z-40 no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-20">
+        <!-- School Identity -->
+        <div class="flex items-center space-x-3 sm:space-x-4">
+          <div class="w-12 h-12 sm:w-14 sm:h-14 bg-white/10 rounded-2xl flex items-center justify-center border border-white/20 shadow-inner flex-shrink-0">
+            <i class="fa-solid fa-graduation-cap text-yellow-400 text-2xl sm:text-3xl"></i>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="text-xs bg-blue-600/60 text-blue-200 px-2 py-0.5 rounded-full font-medium border border-blue-400/30">Google Apps Script Web App</span>
+              <span id="backend-status-badge" class="text-xs bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-400/30 flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>เชื่อมต่อ Sheets สำเร็จ</span>
+              </span>
+            </div>
+            <h1 class="text-lg sm:text-xl font-bold tracking-tight text-white leading-tight mt-0.5" id="header-school-name">
+              โรงเรียนบ้านห้วยไคร้
+            </h1>
+            <p class="text-xs text-blue-200" id="header-school-area">
+              สำนักงานเขตพื้นที่การศึกษาประถมศึกษาสุโขทัย เขต 2
+            </p>
+          </div>
+        </div>
+
+        <!-- User Profile & Quick Actions -->
+        <div class="flex items-center space-x-2 sm:space-x-4">
+          <div class="hidden md:flex flex-col text-right">
+            <span class="text-sm font-semibold text-white" id="current-user-name">นายสมบูรณ์ ศิริวัฒนานนท์</span>
+            <span class="text-xs text-blue-200" id="current-user-role-badge">ผู้อำนวยการโรงเรียน (ผู้มีอำนาจสั่งการ)</span>
+          </div>
+
+          <!-- Switch User Button -->
+          <button onclick="openSwitchUserModal()" title="สลับบทบาทผู้ใช้งาน / ทดสอบระบบ" class="flex items-center space-x-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs sm:text-sm font-medium px-3 py-2 rounded-xl transition shadow-sm">
+            <i class="fa-solid fa-user-circle text-blue-300 text-base"></i>
+            <span class="hidden sm:inline">สลับผู้ใช้</span>
+            <i class="fa-solid fa-chevron-down text-xs text-blue-300"></i>
+          </button>
+
+          <!-- Refresh Data Button -->
+          <button onclick="loadInitialData(true)" title="รีเฟรชข้อมูลจาก Google Sheets" class="p-2.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-xl transition">
+            <i class="fa-solid fa-arrows-rotate text-sm" id="refresh-icon"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================== -->
+  <!-- MAIN NAVIGATION TABS                       -->
+  <!-- ========================================== -->
+  <nav class="bg-white border-b border-slate-200 sticky top-20 z-30 shadow-xs no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex space-x-1 sm:space-x-2 overflow-x-auto py-2.5 scrollbar-none" id="nav-tabs-container">
+        <!-- Tab: Dashboard -->
+        <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="nav-tab active flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium transition whitespace-nowrap bg-blue-50 text-blue-700 font-semibold border border-blue-200">
+          <i class="fa-solid fa-chart-pie text-sm"></i>
+          <span>แดชบอร์ด</span>
+        </button>
+
+        <!-- Tab: Leave Form -->
+        <button onclick="switchTab('leave-form')" id="tab-btn-leave-form" class="nav-tab flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium transition whitespace-nowrap text-slate-600 hover:text-blue-700 hover:bg-slate-100">
+          <i class="fa-solid fa-file-pen text-sm"></i>
+          <span>ยื่นใบลาออนไลน์</span>
+        </button>
+
+        <!-- Tab: History -->
+        <button onclick="switchTab('leave-history')" id="tab-btn-leave-history" class="nav-tab flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium transition whitespace-nowrap text-slate-600 hover:text-blue-700 hover:bg-slate-100">
+          <i class="fa-solid fa-clock-rotate-left text-sm"></i>
+          <span>ประวัติการลา</span>
+        </button>
+
+        <!-- Tab: Approvals (Protected with PIN) -->
+        <button onclick="switchTab('approvals')" id="tab-btn-approvals" class="nav-tab flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium transition whitespace-nowrap text-slate-600 hover:text-blue-700 hover:bg-slate-100">
+          <i class="fa-solid fa-stamp text-sm text-amber-500"></i>
+          <span>ศูนย์อนุมัติ</span>
+          <span id="pending-approval-badge" class="ml-1 bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
+        </button>
+
+        <!-- Tab: Personnel -->
+        <button onclick="switchTab('personnel')" id="tab-btn-personnel" class="nav-tab flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium transition whitespace-nowrap text-slate-600 hover:text-blue-700 hover:bg-slate-100">
+          <i class="fa-solid fa-users text-sm"></i>
+          <span>รายชื่อบุคลากร</span>
+        </button>
+
+        <!-- Tab: Calendar -->
+        <button onclick="switchTab('calendar')" id="tab-btn-calendar" class="nav-tab flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium transition whitespace-nowrap text-slate-600 hover:text-blue-700 hover:bg-slate-100">
+          <i class="fa-solid fa-calendar-days text-sm text-indigo-500"></i>
+          <span>ปฏิทินการลา</span>
+        </button>
+
+        <!-- Tab: Statistics -->
+        <button onclick="switchTab('statistics')" id="tab-btn-statistics" class="nav-tab flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium transition whitespace-nowrap text-slate-600 hover:text-blue-700 hover:bg-slate-100">
+          <i class="fa-solid fa-chart-column text-sm"></i>
+          <span>สถิติและรายงาน</span>
+        </button>
+
+        <!-- Tab: Settings (Protected with PIN) -->
+        <button onclick="switchTab('settings')" id="tab-btn-settings" class="nav-tab flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium transition whitespace-nowrap text-slate-600 hover:text-blue-700 hover:bg-slate-100">
+          <i class="fa-solid fa-sliders text-sm"></i>
+          <span>ตั้งค่าระบบ</span>
+        </button>
+
+        <!-- Tab: Audit Logs -->
+        <button onclick="switchTab('audit-logs')" id="tab-btn-audit-logs" class="nav-tab flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium transition whitespace-nowrap text-slate-600 hover:text-blue-700 hover:bg-slate-100">
+          <i class="fa-solid fa-shield-halved text-sm"></i>
+          <span>บันทึกประวัติ</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ========================================== -->
+  <!-- MAIN CONTENT CONTAINER                     -->
+  <!-- ========================================== -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 no-print">
+
+    <!-- TAB 1: DASHBOARD -->
+    <section id="tab-content-dashboard" class="tab-pane space-y-6">
+      <!-- Welcome Banner -->
+      <div class="bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 rounded-3xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden">
+        <div class="relative z-10 max-w-2xl">
+          <span class="inline-block px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-medium text-blue-100 mb-3">
+            <i class="fa-solid fa-circle-check mr-1 text-emerald-300"></i> ปีงบประมาณ <span id="dash-fiscal-year">2568</span>
+          </span>
+          <h2 class="text-2xl sm:text-3xl font-bold tracking-tight">
+            สวัสดี, <span id="dash-user-name">คุณครู</span>
+          </h2>
+          <p class="mt-2 text-sm sm:text-base text-blue-100 leading-relaxed">
+            ยินดีต้อนรับสู่ระบบจัดการวันลาออนไลน์ โรงเรียนบ้านห้วยไคร้ สพป.สุโขทัย เขต 2 อำนวยความสะดวกในการยื่นใบลา ตรวจสอบภาระงานสอน และอนุมัติตามระเบียบราชการอย่างรวดเร็ว
+          </p>
+          <div class="mt-6 flex flex-wrap gap-3">
+            <button onclick="switchTab('leave-form')" class="px-5 py-2.5 bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-semibold rounded-xl text-sm transition shadow-md flex items-center gap-2">
+              <i class="fa-solid fa-file-circle-plus"></i>
+              <span>ยื่นใบลาใหม่</span>
+            </button>
+            <button onclick="switchTab('approvals')" class="px-5 py-2.5 bg-white/15 hover:bg-white/25 text-white font-medium rounded-xl text-sm transition border border-white/20 flex items-center gap-2">
+              <i class="fa-solid fa-stamp"></i>
+              <span>ตรวจสอบรายการรออนุมัติ</span>
+            </button>
+          </div>
+        </div>
+        <div class="absolute -right-8 -bottom-8 opacity-10 text-white text-[160px] pointer-events-none">
+          <i class="fa-solid fa-file-signature"></i>
+        </div>
+      </div>
+
+      <!-- Quick Metrics Grid -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <!-- Metric 1: Total Leaves -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex items-center justify-between">
+          <div>
+            <p class="text-xs font-medium text-slate-500">ใบลาทั้งหมดในปีนี้</p>
+            <h3 class="text-2xl sm:text-3xl font-bold text-slate-800 mt-1" id="stat-total-leaves">0</h3>
+            <span class="text-[11px] text-slate-400">รายการที่บันทึกแล้ว</span>
+          </div>
+          <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-xl">
+            <i class="fa-solid fa-folder-open"></i>
+          </div>
+        </div>
+
+        <!-- Metric 2: Pending Academic / Director -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex items-center justify-between">
+          <div>
+            <p class="text-xs font-medium text-slate-500">รอตรวจสอบ & อนุมัติ</p>
+            <h3 class="text-2xl sm:text-3xl font-bold text-amber-600 mt-1" id="stat-pending-leaves">0</h3>
+            <span class="text-[11px] text-amber-600 font-medium">รอความเห็นวิชาการ/ผอ.</span>
+          </div>
+          <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-xl">
+            <i class="fa-solid fa-clock"></i>
+          </div>
+        </div>
+
+        <!-- Metric 3: Approved -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex items-center justify-between">
+          <div>
+            <p class="text-xs font-medium text-slate-500">อนุมัติเรียบร้อย</p>
+            <h3 class="text-2xl sm:text-3xl font-bold text-emerald-600 mt-1" id="stat-approved-leaves">0</h3>
+            <span class="text-[11px] text-emerald-600 font-medium">คำสั่งอนุญาตสมบูรณ์</span>
+          </div>
+          <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-xl">
+            <i class="fa-solid fa-circle-check"></i>
+          </div>
+        </div>
+
+        <!-- Metric 4: My Leave Balance -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex items-center justify-between">
+          <div>
+            <p class="text-xs font-medium text-slate-500">วันลาคงเหลือของคุณ</p>
+            <h3 class="text-xl sm:text-2xl font-bold text-indigo-600 mt-1">
+              ป่วย <span id="stat-my-sick-left">60</span> / กิจ <span id="stat-my-personal-left">45</span>
+            </h3>
+            <span class="text-[11px] text-slate-400">วันทำการตามระเบียบ</span>
+          </div>
+          <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-xl">
+            <i class="fa-solid fa-shield-heart"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Leaves Table & Guidelines -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Recent Leave Applications (2 Columns) -->
+        <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="text-base font-bold text-slate-800">รายการใบลาล่าสุด</h3>
+              <p class="text-xs text-slate-500">ใบลาที่มีการเคลื่อนไหวล่าสุดในโรงเรียนบ้านห้วยไคร้</p>
+            </div>
+            <button onclick="switchTab('leave-history')" class="text-xs font-medium text-blue-600 hover:text-blue-800 flex items-center gap-1">
+              <span>ดูทั้งหมด</span>
+              <i class="fa-solid fa-chevron-right text-[10px]"></i>
+            </button>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs sm:text-sm">
+              <thead class="bg-slate-50 text-slate-600 uppercase text-[11px] font-semibold border-y border-slate-200">
+                <tr>
+                  <th class="py-3 px-3">เลขที่ใบลา</th>
+                  <th class="py-3 px-3">ผู้ขอลา</th>
+                  <th class="py-3 px-3">ประเภท</th>
+                  <th class="py-3 px-3">ช่วงวันที่</th>
+                  <th class="py-3 px-3 text-center">สถานะ</th>
+                  <th class="py-3 px-3 text-right">ดำเนินการ</th>
+                </tr>
+              </thead>
+              <tbody id="dashboard-recent-table" class="divide-y divide-slate-100">
+                <!-- Injected via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Right Side: Official Regulations Summary (1 Column) -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center gap-2 mb-3">
+              <i class="fa-solid fa-scale-balanced text-blue-600"></i>
+              <h3 class="text-base font-bold text-slate-800">ระเบียบการลาที่สำคัญ</h3>
+            </div>
+            <div class="space-y-3 text-xs text-slate-600 leading-relaxed">
+              <div class="p-3 bg-blue-50/60 rounded-xl border border-blue-100">
+                <span class="font-bold text-blue-900 block mb-1">1. การลาป่วย</span>
+                ลาติดต่อกันตั้งแต่ 3 วันทำการขึ้นไป ต้องแนบใบรับรองแพทย์ ลาได้ไม่เกิน 60 วันทำการ/ปีงบประมาณ
+              </div>
+              <div class="p-3 bg-amber-50/60 rounded-xl border border-amber-100">
+                <span class="font-bold text-amber-900 block mb-1">2. การลากิจส่วนตัว</span>
+                ต้องยื่นใบลาล่วงหน้าและได้รับอนุญาตก่อนจึงจะหยุดได้ เว้นแต่มีเหตุจำเป็นเร่งด่วน ลาได้ไม่เกิน 45 วันทำการ/ปีงบประมาณ
+              </div>
+              <div class="p-3 bg-emerald-50/60 rounded-xl border border-emerald-100">
+                <span class="font-bold text-emerald-900 block mb-1">3. ผู้ปฏิบัติหน้าที่แทน</span>
+                ครูผู้ลาต้องประสานครูผู้สอนแทน เพื่อจัดการเรียนการสอนไม่ให้ส่งผลกระทบต่อนักเรียน
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 pt-4 border-t border-slate-100 text-center">
+            <span class="text-xs text-slate-400">อ้างอิงระเบียบสำนักนายกรัฐมนตรีว่าด้วยการลาของข้าราชการ พ.ศ. 2555</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: LEAVE FORM -->
+    <section id="tab-content-leave-form" class="tab-pane hidden space-y-6">
+      <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 sm:p-8 max-w-4xl mx-auto">
+        <div class="border-b border-slate-200 pb-5 mb-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-xl sm:text-2xl font-bold text-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-file-pen text-blue-600"></i>
+                <span>แบบฟอร์มขอลาออนไลน์</span>
+              </h2>
+              <p class="text-xs sm:text-sm text-slate-500 mt-1">
+                กรอกข้อมูลการขอลาตามระเบียบข้าราชการครูและบุคลากรทางการศึกษา โรงเรียนบ้านห้วยไคร้
+              </p>
+            </div>
+            <span class="text-xs font-semibold px-3 py-1 bg-blue-100 text-blue-800 rounded-full">
+              ปีงบประมาณ <span id="form-fiscal-year">2568</span>
+            </span>
+          </div>
+        </div>
+
+        <form id="leave-submit-form" onsubmit="handleLeaveFormSubmit(event)" class="space-y-6">
+          <!-- Applicant Info (Auto-filled) -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">ผู้ขอลา</label>
+              <input type="text" id="form-applicant-name" readonly class="w-full text-xs sm:text-sm bg-white border border-slate-200 rounded-lg px-3 py-2 text-slate-700 font-medium">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">ตำแหน่ง / วิทยฐานะ</label>
+              <input type="text" id="form-applicant-position" readonly class="w-full text-xs sm:text-sm bg-white border border-slate-200 rounded-lg px-3 py-2 text-slate-700">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">กลุ่มสาระการเรียนรู้ / ฝ่าย</label>
+              <input type="text" id="form-applicant-dept" readonly class="w-full text-xs sm:text-sm bg-white border border-slate-200 rounded-lg px-3 py-2 text-slate-700">
+            </div>
+          </div>
+
+          <!-- Leave Type Selection -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-800 mb-2">ประเภทการลา <span class="text-red-500">*</span></label>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="leave-type-selector">
+              <label class="cursor-pointer border border-slate-200 hover:border-blue-500 rounded-xl p-3 flex flex-col items-center text-center transition bg-white has-[:checked]:border-blue-600 has-[:checked]:bg-blue-50/50 has-[:checked]:ring-2 has-[:checked]:ring-blue-600">
+                <input type="radio" name="leaveType" value="sick" checked class="hidden" onchange="calculateFormDays()">
+                <i class="fa-solid fa-notes-medical text-xl text-rose-500 mb-1.5"></i>
+                <span class="text-xs font-semibold text-slate-800">ลาป่วย</span>
+                <span class="text-[10px] text-slate-400">คงเหลือ <span id="label-quota-sick">60</span> วัน</span>
+              </label>
+
+              <label class="cursor-pointer border border-slate-200 hover:border-blue-500 rounded-xl p-3 flex flex-col items-center text-center transition bg-white has-[:checked]:border-blue-600 has-[:checked]:bg-blue-50/50 has-[:checked]:ring-2 has-[:checked]:ring-blue-600">
+                <input type="radio" name="leaveType" value="personal" class="hidden" onchange="calculateFormDays()">
+                <i class="fa-solid fa-briefcase text-xl text-amber-500 mb-1.5"></i>
+                <span class="text-xs font-semibold text-slate-800">ลากิจส่วนตัว</span>
+                <span class="text-[10px] text-slate-400">คงเหลือ <span id="label-quota-personal">45</span> วัน</span>
+              </label>
+
+              <label class="cursor-pointer border border-slate-200 hover:border-blue-500 rounded-xl p-3 flex flex-col items-center text-center transition bg-white has-[:checked]:border-blue-600 has-[:checked]:bg-blue-50/50 has-[:checked]:ring-2 has-[:checked]:ring-blue-600">
+                <input type="radio" name="leaveType" value="maternity" class="hidden" onchange="calculateFormDays()">
+                <i class="fa-solid fa-baby text-xl text-pink-500 mb-1.5"></i>
+                <span class="text-xs font-semibold text-slate-800">ลาคลอดบุตร</span>
+                <span class="text-[10px] text-slate-400">สูงสุด 90 วัน</span>
+              </label>
+
+              <label class="cursor-pointer border border-slate-200 hover:border-blue-500 rounded-xl p-3 flex flex-col items-center text-center transition bg-white has-[:checked]:border-blue-600 has-[:checked]:bg-blue-50/50 has-[:checked]:ring-2 has-[:checked]:ring-blue-600">
+                <input type="radio" name="leaveType" value="ordination" class="hidden" onchange="calculateFormDays()">
+                <i class="fa-solid fa-dharmachakra text-xl text-amber-600 mb-1.5"></i>
+                <span class="text-xs font-semibold text-slate-800">ลาอุปสมบท/ฮัจญ์</span>
+                <span class="text-[10px] text-slate-400">สูงสุด 120 วัน</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Date Range & Day Count -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">ตั้งแต่วันที่ <span class="text-red-500">*</span></label>
+              <input type="date" id="form-start-date" required onchange="calculateFormDays()" class="w-full text-xs sm:text-sm border border-slate-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">ถึงวันที่ <span class="text-red-500">*</span></label>
+              <input type="date" id="form-end-date" required onchange="calculateFormDays()" class="w-full text-xs sm:text-sm border border-slate-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">จำนวนวันทำการที่ลา</label>
+              <div class="flex items-center space-x-2">
+                <input type="number" id="form-total-days" readonly step="0.5" value="1" class="w-full text-xs sm:text-sm bg-slate-50 font-bold text-blue-700 border border-slate-300 rounded-xl px-3 py-2.5">
+                <span class="text-xs font-medium text-slate-600">วัน</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Half Day Option -->
+          <div class="flex items-center space-x-4 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+            <label class="flex items-center space-x-2 cursor-pointer">
+              <input type="checkbox" id="form-is-half-day" onchange="toggleHalfDayOption()" class="rounded text-blue-600 focus:ring-blue-500 w-4 h-4">
+              <span class="text-xs sm:text-sm font-medium text-slate-700">ขอลาครึ่งวัน (0.5 วัน)</span>
+            </label>
+            <div id="half-day-period-container" class="hidden flex items-center space-x-3 text-xs">
+              <label class="flex items-center space-x-1 cursor-pointer">
+                <input type="radio" name="halfDayPeriod" value="morning" checked onchange="calculateFormDays()">
+                <span>ช่วงเช้า</span>
+              </label>
+              <label class="flex items-center space-x-1 cursor-pointer">
+                <input type="radio" name="halfDayPeriod" value="afternoon" onchange="calculateFormDays()">
+                <span>ช่วงบ่าย</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Reason -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">เหตุผลความจำเป็นในการลา <span class="text-red-500">*</span></label>
+            <textarea id="form-reason" required rows="3" placeholder="ระบุเหตุผล เช่น มีอาการไข้หวัด ปวดศีรษะ หรือไปติดต่อราชการจำเป็น..." class="w-full text-xs sm:text-sm border border-slate-300 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+          </div>
+
+          <!-- Contact Address & Phone -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">สถานที่ติดต่อระหว่างลา <span class="text-red-500">*</span></label>
+              <input type="text" id="form-contact-address" required placeholder="ที่อยู่ หรือสถานที่ที่ติดต่อได้สะดวกรวดเร็ว" class="w-full text-xs sm:text-sm border border-slate-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">เบอร์โทรศัพท์ที่ติดต่อได้ <span class="text-red-500">*</span></label>
+              <input type="tel" id="form-contact-phone" required placeholder="เช่น 081-234-5678" class="w-full text-xs sm:text-sm border border-slate-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+          </div>
+
+          <!-- Substitute Teacher (ผู้ปฏิบัติหน้าที่แทน) -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">ครูผู้ปฏิบัติหน้าที่สอนแทน (ผู้รับมอบหมายหน้าที่) <span class="text-red-500">*</span></label>
+            <select id="form-substitute-id" required class="w-full text-xs sm:text-sm border border-slate-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+              <!-- Injected via JS -->
+            </select>
+            <p class="text-[11px] text-slate-500 mt-1">
+              <i class="fa-solid fa-circle-info text-blue-500 mr-1"></i> ได้ประสานและมอบหมายงานสอนเรียบร้อยแล้ว
+            </p>
+          </div>
+
+          <!-- Attachment (Optional) -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">เอกสารแนบประกอบการลา (เช่น ใบรับรองแพทย์, หนังสือเรียกพล ฯลฯ)</label>
+            <div class="flex items-center space-x-3">
+              <input type="file" id="form-attachment-file" onchange="handleFileSelected(event)" class="text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
+              <span id="form-attachment-name-label" class="text-xs text-slate-500 italic"></span>
+            </div>
+          </div>
+
+          <!-- Digital Signature Pad -->
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="text-xs font-semibold text-slate-700 flex items-center gap-1">
+                <i class="fa-solid fa-signature text-blue-600"></i>
+                <span>ลายมือชื่ออิเล็กทรอนิกส์ (Digital Signature) <span class="text-red-500">*</span></span>
+              </label>
+              <div class="flex items-center space-x-2">
+                <button type="button" onclick="useProfileSignatureForForm()" class="text-[11px] font-medium text-blue-600 hover:text-blue-800 underline">
+                  ใช้ลายเซ็นประจำตัว
+                </button>
+                <button type="button" onclick="clearFormSignaturePad()" class="text-[11px] font-medium text-rose-600 hover:text-rose-800">
+                  ล้างลายเซ็น
+                </button>
+              </div>
+            </div>
+            <div class="border-2 border-dashed border-slate-300 rounded-2xl bg-slate-50 overflow-hidden relative">
+              <canvas id="form-signature-canvas" width="600" height="150" class="w-full h-36 touch-none cursor-crosshair bg-white"></canvas>
+              <div id="form-signature-placeholder" class="absolute inset-0 flex items-center justify-center pointer-events-none text-slate-300 text-xs">
+                เซ็นลายมือชื่อของท่านที่นี่ (รองรับทั้งเมาส์และหน้าจอสัมผัส)
+              </div>
+            </div>
+          </div>
+
+          <!-- Submit Buttons -->
+          <div class="pt-4 border-t border-slate-200 flex items-center justify-end space-x-3">
+            <button type="button" onclick="switchTab('dashboard')" class="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 text-xs sm:text-sm font-medium hover:bg-slate-100 transition">
+              ยกเลิก
+            </button>
+            <button type="submit" id="form-submit-btn" class="px-6 py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white text-xs sm:text-sm font-semibold transition shadow-md flex items-center gap-2">
+              <i class="fa-solid fa-paper-plane"></i>
+              <span>ยื่นใบลาต่อผู้บังคับบัญชา</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- TAB 3: LEAVE HISTORY & PRINT -->
+    <section id="tab-content-leave-history" class="tab-pane hidden space-y-6">
+      <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-200">
+          <div>
+            <h2 class="text-xl sm:text-2xl font-bold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-clock-rotate-left text-blue-600"></i>
+              <span>ประวัติการลา</span>
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-500 mt-0.5">
+              ตรวจสอบรายการใบลา ค้นหา กรองสถานะ และสั่งพิมพ์แบบใบลาทางการ (A4)
+            </p>
+          </div>
+
+          <!-- Action & Filters -->
+          <div class="flex flex-wrap items-center gap-2">
+            <select id="filter-history-type" onchange="renderHistoryTable()" class="text-xs border border-slate-300 rounded-xl px-3 py-2 bg-white">
+              <option value="all">ทุกประเภทการลา</option>
+              <option value="sick">ลาป่วย</option>
+              <option value="personal">ลากิจส่วนตัว</option>
+              <option value="maternity">ลาคลอดบุตร</option>
+              <option value="ordination">ลาอุปสมบท/ฮัจญ์</option>
+            </select>
+
+            <select id="filter-history-status" onchange="renderHistoryTable()" class="text-xs border border-slate-300 rounded-xl px-3 py-2 bg-white">
+              <option value="all">ทุกสถานะ</option>
+              <option value="pending_academic">รอวิชาการ</option>
+              <option value="pending_director">รอ ผอ. อนุมัติ</option>
+              <option value="approved">อนุมัติแล้ว</option>
+              <option value="rejected">ไม่อนุมัติ</option>
+              <option value="cancelled">ยกเลิกแล้ว</option>
+            </select>
+
+            <select id="filter-history-scope" onchange="renderHistoryTable()" class="text-xs border border-slate-300 rounded-xl px-3 py-2 bg-white font-medium text-blue-700">
+              <option value="my">เฉพาะของฉัน</option>
+              <option value="all">ของบุคลากรทั้งหมด</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="overflow-x-auto mt-4">
+          <table class="w-full text-left text-xs sm:text-sm">
+            <thead class="bg-slate-50 text-slate-600 uppercase text-[11px] font-semibold border-y border-slate-200">
+              <tr>
+                <th class="py-3 px-3">เลขที่ใบลา</th>
+                <th class="py-3 px-3">ผู้ขอลา</th>
+                <th class="py-3 px-3">ประเภท</th>
+                <th class="py-3 px-3">ช่วงวันที่ลา</th>
+                <th class="py-3 px-3 text-center">จำนวนวัน</th>
+                <th class="py-3 px-3 text-center">สถานะ</th>
+                <th class="py-3 px-3 text-right">ดำเนินการ</th>
+              </tr>
+            </thead>
+            <tbody id="history-table-body" class="divide-y divide-slate-100">
+              <!-- Injected via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: APPROVAL CENTER (PROTECTED BY PIN) -->
+    <section id="tab-content-approvals" class="tab-pane hidden space-y-6">
+      <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-200">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="p-2 bg-amber-100 text-amber-700 rounded-xl text-lg">
+                <i class="fa-solid fa-stamp"></i>
+              </span>
+              <div>
+                <h2 class="text-xl sm:text-2xl font-bold text-slate-800">ศูนย์พิจารณาและอนุมัติการลา</h2>
+                <p class="text-xs sm:text-sm text-slate-500">
+                  สำหรับหัวหน้าฝ่ายวิชาการ (ลงความเห็น) และผู้อำนวยการโรงเรียน (สั่งการอนุญาต)
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center space-x-2">
+            <span class="text-xs text-slate-500">บทบาทปัจจุบัน:</span>
+            <span class="text-xs font-bold px-2.5 py-1 bg-blue-100 text-blue-800 rounded-lg" id="approval-current-role-badge">
+              ผู้อำนวยการ
+            </span>
+          </div>
+        </div>
+
+        <!-- Approval Steps Explainer -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+          <div class="p-4 rounded-xl bg-blue-50/70 border border-blue-200 flex items-start space-x-3">
+            <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
+              1
+            </div>
+            <div>
+              <h4 class="text-xs sm:text-sm font-bold text-blue-900">ขั้นตอนที่ 1: ตรวจสอบภาระงานสอน</h4>
+              <p class="text-xs text-blue-800 mt-0.5">
+                หัวหน้าฝ่ายบริหารงานวิชาการตรวจสอบภาระงานสอน การมอบหมายงาน และลงความเห็นชอบเสนอ ผอ.
+              </p>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-indigo-50/70 border border-indigo-200 flex items-start space-x-3">
+            <div class="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
+              2
+            </div>
+            <div>
+              <h4 class="text-xs sm:text-sm font-bold text-indigo-900">ขั้นตอนที่ 2: ผู้อำนวยการสั่งการ</h4>
+              <p class="text-xs text-indigo-800 mt-0.5">
+                ผู้อำนวยการโรงเรียนบ้านห้วยไคร้พิจารณาสั่งการ อนุมัติ หรือ ไม่อนุมัติ และลงนามสั่งการ
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pending Items List -->
+        <div class="mt-6">
+          <h3 class="text-base font-bold text-slate-800 mb-3 flex items-center gap-2">
+            <i class="fa-solid fa-list-check text-blue-600"></i>
+            <span>รายการที่รอการพิจารณาในขณะนี้</span>
+          </h3>
+
+          <div id="approval-cards-container" class="space-y-4">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: PERSONNEL LIST -->
+    <section id="tab-content-personnel" class="tab-pane hidden space-y-6">
+      <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-200">
+          <div>
+            <h2 class="text-xl sm:text-2xl font-bold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-users text-blue-600"></i>
+              <span>รายชื่อครูและบุคลากร</span>
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-500 mt-0.5">
+              คณะครูและบุคลากรทางการศึกษา โรงเรียนบ้านห้วยไคร้ สพป.สุโขทัย เขต 2
+            </p>
+          </div>
+          <button onclick="openAddPersonnelModal()" class="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs sm:text-sm font-semibold transition flex items-center gap-2 shadow-xs">
+            <i class="fa-solid fa-user-plus"></i>
+            <span>เพิ่มบุคลากร</span>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-6" id="personnel-cards-container">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 6: LEAVE CALENDAR -->
+    <section id="tab-content-calendar" class="tab-pane hidden space-y-6">
+      <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-200">
+          <div>
+            <h2 class="text-xl sm:text-2xl font-bold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-calendar-days text-indigo-600"></i>
+              <span>ปฏิทินการลาของบุคลากร</span>
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-500 mt-0.5">
+              ตรวจสอบวันลาของครูในแต่ละวัน เพื่อวางแผนการจัดการเรียนการสอนและกิจกรรมโรงเรียน
+            </p>
+          </div>
+
+          <div class="flex items-center space-x-2">
+            <button onclick="changeCalendarMonth(-1)" class="p-2 border border-slate-300 rounded-xl hover:bg-slate-100 transition">
+              <i class="fa-solid fa-chevron-left text-xs"></i>
+            </button>
+            <span class="text-sm font-bold text-slate-800 px-3" id="calendar-month-year-label">มกราคม 2568</span>
+            <button onclick="changeCalendarMonth(1)" class="p-2 border border-slate-300 rounded-xl hover:bg-slate-100 transition">
+              <i class="fa-solid fa-chevron-right text-xs"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Calendar Days Grid -->
+        <div class="mt-4">
+          <div class="grid grid-cols-7 text-center font-semibold text-xs text-slate-500 py-2 border-b border-slate-200">
+            <div class="text-red-500">อา.</div>
+            <div>จ.</div>
+            <div>อ.</div>
+            <div>พ.</div>
+            <div>พฤ.</div>
+            <div>ศ.</div>
+            <div class="text-amber-500">ส.</div>
+          </div>
+          <div class="grid grid-cols-7 gap-1 mt-2" id="calendar-grid-cells">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+
+        <!-- Calendar Legend -->
+        <div class="mt-6 pt-4 border-t border-slate-200 flex flex-wrap items-center gap-4 text-xs text-slate-600">
+          <span class="font-semibold">สัญลักษณ์:</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-rose-500"></span> ลาป่วย</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-500"></span> ลากิจส่วนตัว</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-pink-500"></span> ลาคลอด</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500"></span> วันหยุดราชการ/ชดเชย</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 7: STATISTICS & REPORTS -->
+    <section id="tab-content-statistics" class="tab-pane hidden space-y-6">
+      <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-200">
+          <div>
+            <h2 class="text-xl sm:text-2xl font-bold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-chart-column text-blue-600"></i>
+              <span>สถิติและรายงานสรุปการลา</span>
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-500 mt-0.5">
+              สรุปข้อมูลการลาเพื่อประกอบการประเมินผลการปฏิบัติราชการและส่งรายงาน สพป.สุโขทัย เขต 2
+            </p>
+          </div>
+
+          <div class="flex items-center space-x-2">
+            <button onclick="exportLeaveReportCSV()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-semibold transition flex items-center gap-2 shadow-xs">
+              <i class="fa-solid fa-file-excel"></i>
+              <span>ส่งออก Excel (CSV)</span>
+            </button>
+            <button onclick="window.print()" class="px-4 py-2 border border-slate-300 hover:bg-slate-100 rounded-xl text-xs sm:text-sm font-medium transition flex items-center gap-2">
+              <i class="fa-solid fa-print"></i>
+              <span>พิมพ์รายงาน</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Breakdown Summary Table -->
+        <div class="mt-6">
+          <h3 class="text-sm font-bold text-slate-800 mb-3">สรุปวันลาสะสมรายบุคคล (ปีงบประมาณ 2568)</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs sm:text-sm">
+              <thead class="bg-slate-50 text-slate-600 uppercase text-[11px] font-semibold border-y border-slate-200">
+                <tr>
+                  <th class="py-3 px-3">ชื่อ - สกุล</th>
+                  <th class="py-3 px-3">ตำแหน่ง</th>
+                  <th class="py-3 px-3 text-center">ลาป่วย (วัน)</th>
+                  <th class="py-3 px-3 text-center">ลากิจ (วัน)</th>
+                  <th class="py-3 px-3 text-center">ลาอื่นๆ (วัน)</th>
+                  <th class="py-3 px-3 text-center">รวมวันลาทั้งหมด</th>
+                  <th class="py-3 px-3 text-center">จำนวนครั้งที่ลา</th>
+                </tr>
+              </thead>
+              <tbody id="statistics-table-body" class="divide-y divide-slate-100">
+                <!-- Injected via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 8: SETTINGS (PROTECTED BY PIN) -->
+    <section id="tab-content-settings" class="tab-pane hidden space-y-6">
+      <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 sm:p-8 max-w-4xl mx-auto">
+        <div class="pb-5 border-b border-slate-200">
+          <h2 class="text-xl sm:text-2xl font-bold text-slate-800 flex items-center gap-2">
+            <i class="fa-solid fa-sliders text-blue-600"></i>
+            <span>ตั้งค่าโรงเรียนและระบบ</span>
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-500 mt-0.5">
+            จัดการข้อมูลสถานศึกษา ผู้มีอำนาจสั่งการ และการเชื่อมต่อการแจ้งเตือน LINE
+          </p>
+        </div>
+
+        <form id="settings-form" onsubmit="handleSettingsFormSubmit(event)" class="space-y-6 mt-6">
+          <!-- School Info -->
+          <div class="space-y-4">
+            <h3 class="text-sm font-bold text-blue-900 border-b border-blue-100 pb-2">ข้อมูลสถานศึกษา</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">ชื่อโรงเรียน</label>
+                <input type="text" id="setting-school-name" class="w-full text-xs sm:text-sm border border-slate-300 rounded-xl px-3 py-2.5">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">สังกัดเขตพื้นที่การศึกษา</label>
+                <input type="text" id="setting-school-area" class="w-full text-xs sm:text-sm border border-slate-300 rounded-xl px-3 py-2.5">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">ปีงบประมาณปัจจุบัน</label>
+                <input type="number" id="setting-fiscal-year" class="w-full text-xs sm:text-sm border border-slate-300 rounded-xl px-3 py-2.5">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">เบอร์โทรศัพท์โรงเรียน</label>
+                <input type="text" id="setting-phone" class="w-full text-xs sm:text-sm border border-slate-300 rounded-xl px-3 py-2.5">
+              </div>
+              <div class="sm:col-span-2">
+                <label class="block text-xs font-semibold text-slate-700 mb-1">ที่ตั้งสถานศึกษา</label>
+                <input type="text" id="setting-address" class="w-full text-xs sm:text-sm border border-slate-300 rounded-xl px-3 py-2.5">
+              </div>
+            </div>
+          </div>
+
+          <!-- Position Holders -->
+          <div class="space-y-4 pt-4 border-t border-slate-200">
+            <h3 class="text-sm font-bold text-blue-900 border-b border-blue-100 pb-2">ผู้บริหารและผู้ปฏิบัติหน้าที่</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">ผู้อำนวยการโรงเรียน (ผู้สั่งการ)</label>
+                <select id="setting-director-id" class="w-full text-xs sm:text-sm border border-slate-300 rounded-xl px-3 py-2.5 bg-white">
+                  <!-- Injected via JS -->
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">หัวหน้าฝ่ายวิชาการ (ผู้ลงความเห็น)</label>
+                <select id="setting-academic-id" class="w-full text-xs sm:text-sm border border-slate-300 rounded-xl px-3 py-2.5 bg-white">
+                  <!-- Injected via JS -->
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Security PIN -->
+          <div class="space-y-4 pt-4 border-t border-slate-200">
+            <h3 class="text-sm font-bold text-blue-900 border-b border-blue-100 pb-2">รหัส PIN ป้องกันแท็บสำคัญ</h3>
+            <div class="max-w-xs">
+              <label class="block text-xs font-semibold text-slate-700 mb-1">รหัส PIN 4 หลัก (สำหรับอนุมัติและตั้งค่า)</label>
+              <input type="password" id="setting-pin-code" maxlength="6" class="w-full text-xs sm:text-sm border border-slate-300 rounded-xl px-3 py-2.5 tracking-widest font-mono">
+              <span class="text-[11px] text-slate-400">ค่าเริ่มต้นคือ 1234</span>
+            </div>
+          </div>
+
+          <!-- LINE Notification Settings -->
+          <div class="space-y-4 pt-4 border-t border-slate-200">
+            <div class="flex items-center justify-between border-b border-blue-100 pb-2">
+              <h3 class="text-sm font-bold text-blue-900 flex items-center gap-2">
+                <i class="fa-brands fa-line text-emerald-500 text-lg"></i>
+                <span>การแจ้งเตือนผ่าน LINE Notify / LINE Messaging API</span>
+              </h3>
+              <label class="flex items-center space-x-2 cursor-pointer">
+                <input type="checkbox" id="setting-line-enabled" class="rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4">
+                <span class="text-xs font-semibold text-slate-700">เปิดใช้งานแจ้งเตือน</span>
+              </label>
+            </div>
+
+            <div class="space-y-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">LINE Token (Channel Access Token หรือ LINE Notify Token)</label>
+                <input type="password" id="setting-line-token" placeholder="วาง Token ที่ได้จาก LINE Developers หรือ LINE Notify" class="w-full text-xs sm:text-sm border border-slate-300 rounded-xl px-3 py-2.5">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">LINE Group ID / Target ID (หากใช้ Messaging API)</label>
+                <input type="text" id="setting-line-group" placeholder="เช่น U123456... หรือ C123456... (เว้นว่างได้หากใช้ LINE Notify)" class="w-full text-xs sm:text-sm border border-slate-300 rounded-xl px-3 py-2.5">
+              </div>
+              <div>
+                <button type="button" onclick="testLineNotifyConnection()" class="px-4 py-2 border border-emerald-500 text-emerald-700 hover:bg-emerald-50 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+                  <i class="fa-regular fa-paper-plane"></i>
+                  <span>ทดสอบส่งข้อความเข้า LINE</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Save Button -->
+          <div class="pt-5 border-t border-slate-200 flex justify-end">
+            <button type="submit" class="px-6 py-2.5 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs sm:text-sm font-semibold transition shadow-md flex items-center gap-2">
+              <i class="fa-solid fa-floppy-disk"></i>
+              <span>บันทึกการตั้งค่าทั้งหมด</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- TAB 9: AUDIT LOGS -->
+    <section id="tab-content-audit-logs" class="tab-pane hidden space-y-6">
+      <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6">
+        <div class="pb-5 border-b border-slate-200">
+          <h2 class="text-xl sm:text-2xl font-bold text-slate-800 flex items-center gap-2">
+            <i class="fa-solid fa-shield-halved text-blue-600"></i>
+            <span>บันทึกประวัติการทำรายการในระบบ (Audit Logs)</span>
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-500 mt-0.5">
+            บันทึกการยื่นใบลา การให้ความเห็น การสั่งการอนุมัติ และการแก้ไขข้อมูลเพื่อความโปร่งใส
+          </p>
+        </div>
+
+        <div class="overflow-x-auto mt-4">
+          <table class="w-full text-left text-xs sm:text-sm">
+            <thead class="bg-slate-50 text-slate-600 uppercase text-[11px] font-semibold border-y border-slate-200">
+              <tr>
+                <th class="py-3 px-3">วัน - เวลา</th>
+                <th class="py-3 px-3">ผู้ดำเนินการ</th>
+                <th class="py-3 px-3">บทบาท</th>
+                <th class="py-3 px-3">การกระทำ</th>
+                <th class="py-3 px-3">รายละเอียด</th>
+              </tr>
+            </thead>
+            <tbody id="audit-table-body" class="divide-y divide-slate-100">
+              <!-- Injected via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: OFFICIAL A4 LEAVE SLIP (แบบใบลาทางการ สพฐ./ก.พ.)     -->
+  <!-- ======================================================== -->
+  <div id="official-slip-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden overflow-y-auto p-4 flex items-center justify-center no-print">
+    <div class="bg-white w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden flex flex-col my-8">
+      <!-- Modal Header -->
+      <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between no-print">
+        <div class="flex items-center space-x-3">
+          <i class="fa-solid fa-print text-yellow-400 text-lg"></i>
+          <div>
+            <h3 class="font-bold text-sm sm:text-base">พิมพ์แบบใบลาทางการ (A4)</h3>
+            <span class="text-xs text-slate-400" id="modal-slip-ref-title">ลร.01/2568</span>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button onclick="window.print()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition flex items-center gap-1.5 shadow-xs">
+            <i class="fa-solid fa-print"></i>
+            <span>สั่งพิมพ์ (A4)</span>
+          </button>
+          <button onclick="closeOfficialSlipModal()" class="p-2 text-slate-400 hover:text-white rounded-xl transition">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Slip Body (Rendered for Screen Preview & Print Container) -->
+      <div class="p-6 sm:p-10 overflow-y-auto max-h-[80vh] bg-slate-100 flex justify-center">
+        <!-- The actual A4 document styled sheet -->
+        <div id="official-print-container" class="bg-white w-[210mm] min-h-[297mm] p-[18mm] text-slate-900 font-sarabun text-[14pt] leading-[1.6] shadow-md border border-slate-200">
+          <!-- Garuda Emblem Header -->
+          <div class="text-center mb-4">
+            <div class="w-16 h-16 mx-auto mb-2 flex items-center justify-center">
+              <svg viewBox="0 0 100 100" class="w-14 h-14 text-slate-800 fill-current">
+                <path d="M50 5 L60 25 L85 25 L65 40 L72 65 L50 50 L28 65 L35 40 L15 25 L40 25 Z" />
+              </svg>
+            </div>
+            <h2 class="text-[18pt] font-bold tracking-tight">แบบใบลาป่วย ลากิจส่วนตัว ลาคลอดบุตร</h2>
+          </div>
+
+          <!-- Date & Location -->
+          <div class="text-right mt-3 mb-4 space-y-1">
+            <p>เขียนที่ <span class="font-bold" id="slip-school-name">โรงเรียนบ้านห้วยไคร้</span></p>
+            <p>วันที่ <span id="slip-written-day">-</span> เดือน <span id="slip-written-month">-</span> พ.ศ. <span id="slip-written-year">-</span></p>
+          </div>
+
+          <!-- Subject & Addressee -->
+          <div class="space-y-1 mb-4">
+            <p><span class="font-bold">เรื่อง</span> <span id="slip-leave-subject">ขอลาป่วย</span></p>
+            <p><span class="font-bold">เรียน</span> ผู้อำนวยการโรงเรียนบ้านห้วยไคร้</p>
+          </div>
+
+          <!-- Body Content -->
+          <div class="indent-12 text-justify mb-4">
+            ข้าพเจ้า <span class="font-bold" id="slip-applicant-name">-</span> 
+            ตำแหน่ง <span id="slip-applicant-position">-</span>
+            สังกัด <span id="slip-applicant-dept">-</span> 
+            <span id="slip-school-area-text">สำนักงานเขตพื้นที่การศึกษาประถมศึกษาสุโขทัย เขต 2</span>
+            มีความประสงค์ขอ <span class="font-bold" id="slip-leave-type-desc">ลาป่วย</span> 
+            เนื่องจาก <span id="slip-leave-reason">-</span>
+            ตั้งแต่วันที่ <span class="font-bold" id="slip-start-date">-</span> 
+            ถึงวันที่ <span class="font-bold" id="slip-end-date">-</span> 
+            มีกำหนด <span class="font-bold text-[15pt]" id="slip-total-days">-</span> วัน
+            ในระหว่างการลานี้สามารถติดต่อข้าพเจ้าได้ที่ <span id="slip-contact-address">-</span> 
+            หมายเลขโทรศัพท์ <span class="font-bold" id="slip-contact-phone">-</span>
+          </div>
+
+          <div class="indent-12 text-justify mb-6">
+            ในการนี้ ข้าพเจ้าได้มอบหมายหน้าที่และภาระงานสอนให้ <span class="font-bold" id="slip-substitute-name">-</span> 
+            เป็นผู้ปฏิบัติหน้าที่สอนแทนในระหว่างลา และผู้รับมอบหมายหน้าที่ได้ตอบรับการปฏิบัติงานแทนเรียบร้อยแล้ว
+          </div>
+
+          <!-- Signatures Section 1: Applicant & Substitute -->
+          <div class="grid grid-cols-2 gap-6 my-6">
+            <!-- Substitute -->
+            <div class="text-center space-y-2">
+              <p>ทราบและยินดีปฏิบัติหน้าที่แทน</p>
+              <div class="h-16 flex items-center justify-center">
+                <img id="slip-substitute-sig-img" class="h-14 max-w-[200px] object-contain" alt="ลายเซ็นผู้แทน">
+              </div>
+              <p>(ลงชื่อ).......................................................</p>
+              <p>(<span id="slip-substitute-name-bracket">-</span>)</p>
+              <p>ผู้ปฏิบัติหน้าที่แทน</p>
+            </div>
+
+            <!-- Applicant -->
+            <div class="text-center space-y-2">
+              <p>ขอแสดงความนับถือ</p>
+              <div class="h-16 flex items-center justify-center">
+                <img id="slip-applicant-sig-img" class="h-14 max-w-[200px] object-contain" alt="ลายเซ็นผู้ลา">
+              </div>
+              <p>(ลงชื่อ).......................................................</p>
+              <p>(<span id="slip-applicant-name-bracket">-</span>)</p>
+              <p><span id="slip-applicant-position-bracket">-</span></p>
+            </div>
+          </div>
+
+          <!-- Leave Stats Table & Academic Review Box -->
+          <div class="border border-slate-800 my-6 grid grid-cols-2 text-[12pt] divide-x divide-slate-800">
+            <!-- Left: Leave Statistics -->
+            <div class="p-3 space-y-2">
+              <p class="font-bold text-center border-b border-slate-300 pb-1">สถิติการลาในปีงบประมาณนี้</p>
+              <table class="w-full text-center text-[11pt]">
+                <thead>
+                  <tr class="border-b border-slate-200 font-semibold">
+                    <th class="py-1">ประเภทการลา</th>
+                    <th>ลามาแล้ว</th>
+                    <th>ลาครั้งนี้</th>
+                    <th>รวมเป็น</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  <tr>
+                    <td class="text-left py-1">ลาป่วย</td>
+                    <td id="slip-stat-sick-past">0 วัน</td>
+                    <td id="slip-stat-sick-current">-</td>
+                    <td id="slip-stat-sick-total">-</td>
+                  </tr>
+                  <tr>
+                    <td class="text-left py-1">ลากิจส่วนตัว</td>
+                    <td id="slip-stat-pers-past">0 วัน</td>
+                    <td id="slip-stat-pers-current">-</td>
+                    <td id="slip-stat-pers-total">-</td>
+                  </tr>
+                  <tr>
+                    <td class="text-left py-1">ลาคลอดบุตร</td>
+                    <td id="slip-stat-mat-past">0 วัน</td>
+                    <td id="slip-stat-mat-current">-</td>
+                    <td id="slip-stat-mat-total">-</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="pt-4 text-center">
+                <p>(ลงชื่อ).......................................................ผู้ตรวจสอบ</p>
+                <p>(นางสาวศิริพร ทองคำ)</p>
+                <p>เจ้าพนักงานธุรการโรงเรียน</p>
+              </div>
+            </div>
+
+            <!-- Right: Academic Review -->
+            <div class="p-3 flex flex-col justify-between">
+              <div>
+                <p class="font-bold text-center border-b border-slate-300 pb-1">ความเห็นของหัวหน้าฝ่ายวิชาการ</p>
+                <p class="mt-2 text-justify" id="slip-academic-comment">
+                  เห็นควรอนุญาต ได้ตรวจสอบภาระงานสอนและใบงานมอบหมายแล้ว
+                </p>
+              </div>
+              <div class="text-center mt-4">
+                <div class="h-12 flex items-center justify-center">
+                  <img id="slip-academic-sig-img" class="h-12 max-w-[180px] object-contain" alt="ลายเซ็นวิชาการ">
+                </div>
+                <p>(ลงชื่อ).......................................................</p>
+                <p>(นางพรรณทิพา สุริยฉัตร)</p>
+                <p>หัวหน้าฝ่ายบริหารงานวิชาการ</p>
+                <p class="text-[10pt]" id="slip-academic-date">วันที่ ......../......../........</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom: Director's Command & Approval -->
+          <div class="border border-slate-800 p-4 rounded-xs text-[12pt]">
+            <p class="font-bold">คำสั่ง / การพิจารณาของผู้อำนวยการโรงเรียน</p>
+            <div class="mt-2 flex items-center space-x-6">
+              <label class="flex items-center space-x-2">
+                <input type="checkbox" id="slip-check-approved" checked class="w-4 h-4">
+                <span class="font-semibold">อนุญาต</span>
+              </label>
+              <label class="flex items-center space-x-2">
+                <input type="checkbox" id="slip-check-rejected" class="w-4 h-4">
+                <span>ไม่อนุญาต</span>
+              </label>
+              <span class="text-slate-600 ml-4 font-sarabun" id="slip-director-note"></span>
+            </div>
+
+            <div class="mt-6 text-right mr-8">
+              <div class="inline-block text-center space-y-1">
+                <div class="h-14 flex items-center justify-center">
+                  <img id="slip-director-sig-img" class="h-14 max-w-[200px] object-contain" alt="ลายเซ็น ผอ.">
+                </div>
+                <p>(ลงชื่อ)....................................................................</p>
+                <p>(นายสมบูรณ์ ศิริวัฒนานนท์)</p>
+                <p>ผู้อำนวยการโรงเรียนบ้านห้วยไคร้</p>
+                <p class="text-[10pt]" id="slip-director-date">วันที่ ......../......../........</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: APPROVAL / REVIEW ACTION WITH SIGNATURE           -->
+  <!-- ======================================================== -->
+  <div id="approval-action-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden overflow-y-auto p-4 flex items-center justify-center no-print">
+    <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+      <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+        <h3 class="font-bold text-base flex items-center gap-2" id="approval-modal-title">
+          <i class="fa-solid fa-stamp text-amber-400"></i>
+          <span>บันทึกการพิจารณาใบลา</span>
+        </h3>
+        <button onclick="closeApprovalModal()" class="text-slate-400 hover:text-white">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form id="approval-action-form" onsubmit="handleApprovalSubmit(event)" class="p-6 space-y-4">
+        <input type="hidden" id="modal-approval-record-id">
+        <input type="hidden" id="modal-approval-stage">
+
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs space-y-1">
+          <p><span class="font-semibold text-slate-600">เลขที่ใบลา:</span> <span id="modal-appr-ref" class="font-bold text-blue-700"></span></p>
+          <p><span class="font-semibold text-slate-600">ผู้ขอลา:</span> <span id="modal-appr-applicant"></span></p>
+          <p><span class="font-semibold text-slate-600">ประเภท & วันที่:</span> <span id="modal-appr-type-dates"></span></p>
+          <p><span class="font-semibold text-slate-600">เหตุผล:</span> <span id="modal-appr-reason"></span></p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">การสั่งการ / ความเห็นชอบ</label>
+          <div class="grid grid-cols-2 gap-3" id="approval-decision-buttons">
+            <label class="cursor-pointer border border-slate-300 rounded-xl p-3 flex items-center justify-center space-x-2 text-xs font-bold text-emerald-700 bg-white has-[:checked]:bg-emerald-50 has-[:checked]:border-emerald-600 has-[:checked]:ring-2 has-[:checked]:ring-emerald-500">
+              <input type="radio" name="approvalDecision" value="approve" checked class="hidden">
+              <i class="fa-solid fa-circle-check text-emerald-600"></i>
+              <span id="decision-approve-label">เห็นควรอนุญาต / อนุมัติ</span>
+            </label>
+            <label class="cursor-pointer border border-slate-300 rounded-xl p-3 flex items-center justify-center space-x-2 text-xs font-bold text-rose-700 bg-white has-[:checked]:bg-rose-50 has-[:checked]:border-rose-600 has-[:checked]:ring-2 has-[:checked]:ring-rose-500">
+              <input type="radio" name="approvalDecision" value="reject" class="hidden">
+              <i class="fa-solid fa-circle-xmark text-rose-600"></i>
+              <span id="decision-reject-label">ไม่อนุญาต</span>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">บันทึกข้อความ / ความเห็น</label>
+          <textarea id="modal-approval-comment" rows="2" class="w-full text-xs sm:text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="เช่น เห็นควรอนุญาต ได้ตรวจสอบภาระงานสอนแล้ว หรือ อนุมัติตามเสนอ"></textarea>
+        </div>
+
+        <!-- Canvas Signature Pad -->
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="text-xs font-semibold text-slate-700">ลายมือชื่อผู้พิจารณา</label>
+            <div class="space-x-2 text-[11px]">
+              <button type="button" onclick="useProfileSignatureForApproval()" class="text-blue-600 underline">ใช้ลายเซ็นบันทึกไว้</button>
+              <button type="button" onclick="clearApprovalSignaturePad()" class="text-rose-600">ล้าง</button>
+            </div>
+          </div>
+          <div class="border-2 border-dashed border-slate-300 rounded-xl overflow-hidden relative">
+            <canvas id="approval-signature-canvas" width="450" height="120" class="w-full h-28 touch-none bg-white"></canvas>
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-200 flex justify-end space-x-2">
+          <button type="button" onclick="closeApprovalModal()" class="px-4 py-2 border border-slate-300 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100">ยกเลิก</button>
+          <button type="submit" id="modal-approval-submit-btn" class="px-5 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-semibold flex items-center gap-2">
+            <i class="fa-solid fa-check"></i>
+            <span>ยืนยันการพิจารณา</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: PIN VERIFICATION (PROTECTING APPROVALS/SETTINGS)   -->
+  <!-- ======================================================== -->
+  <div id="pin-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden overflow-y-auto p-4 flex items-center justify-center no-print">
+    <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-6 text-center">
+      <div class="w-14 h-14 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4">
+        <i class="fa-solid fa-lock"></i>
+      </div>
+      <h3 class="font-bold text-lg text-slate-800">ยืนยันรหัส PIN ความปลอดภัย</h3>
+      <p class="text-xs text-slate-500 mt-1 mb-4">
+        กรุณากรอกรหัส PIN เพื่อเข้าถึงหน้าพิจารณาอนุมัติหรือตั้งค่าระบบ (ค่าเริ่มต้น: 1234)
+      </p>
+
+      <div class="flex justify-center mb-6">
+        <input type="password" id="pin-input" maxlength="6" autofocus class="text-center text-2xl tracking-[1em] font-mono border-2 border-slate-300 rounded-2xl w-48 py-2.5 focus:border-blue-600 focus:outline-none" placeholder="••••">
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <button onclick="closePinModal()" class="py-2.5 border border-slate-300 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-100">ยกเลิก</button>
+        <button onclick="verifyPinCode()" class="py-2.5 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-semibold shadow-md">ปลดล็อก</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: SWITCH USER (ROLE PICKER)                          -->
+  <!-- ======================================================== -->
+  <div id="switch-user-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden overflow-y-auto p-4 flex items-center justify-center no-print">
+    <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl p-6">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-200">
+        <div>
+          <h3 class="font-bold text-base text-slate-800">สลับบทบาทผู้ใช้งาน / ครูผู้ปฏิบัติงาน</h3>
+          <p class="text-xs text-slate-500 mt-0.5">เลือกบุคลากรเพื่อทดสอบขั้นตอนการยื่นใบลาและอนุมัติ</p>
+        </div>
+        <button onclick="closeSwitchUserModal()" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="space-y-2 mt-4 max-h-[60vh] overflow-y-auto" id="switch-user-list">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: ADD PERSONNEL                                     -->
+  <!-- ======================================================== -->
+  <div id="add-personnel-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden overflow-y-auto p-4 flex items-center justify-center no-print">
+    <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl p-6">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-200">
+        <h3 class="font-bold text-base text-slate-800 flex items-center gap-2">
+          <i class="fa-solid fa-user-plus text-blue-600"></i>
+          <span>เพิ่มข้อมูลบุคลากรใหม่</span>
+        </h3>
+        <button onclick="closeAddPersonnelModal()" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form id="add-personnel-form" onsubmit="handleAddPersonnelSubmit(event)" class="space-y-4 mt-4">
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">คำนำหน้า</label>
+            <input type="text" id="add-p-prefix" required placeholder="นาย/นาง/นางสาว" class="w-full text-xs border border-slate-300 rounded-xl px-3 py-2">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">ชื่อ</label>
+            <input type="text" id="add-p-firstname" required placeholder="ชื่อจริง" class="w-full text-xs border border-slate-300 rounded-xl px-3 py-2">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">นามสกุล</label>
+            <input type="text" id="add-p-lastname" required placeholder="นามสกุล" class="w-full text-xs border border-slate-300 rounded-xl px-3 py-2">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">ตำแหน่ง</label>
+            <input type="text" id="add-p-position" required placeholder="เช่น ครู, ครูผู้ช่วย" class="w-full text-xs border border-slate-300 rounded-xl px-3 py-2">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">วิทยฐานะ</label>
+            <input type="text" id="add-p-academic" placeholder="เช่น ชำนาญการพิเศษ" class="w-full text-xs border border-slate-300 rounded-xl px-3 py-2">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">กลุ่มสาระการเรียนรู้ / ฝ่าย</label>
+          <input type="text" id="add-p-department" placeholder="เช่น กลุ่มสาระการเรียนรู้ภาษาไทย" class="w-full text-xs border border-slate-300 rounded-xl px-3 py-2">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">เบอร์โทรศัพท์</label>
+            <input type="tel" id="add-p-phone" placeholder="08X-XXX-XXXX" class="w-full text-xs border border-slate-300 rounded-xl px-3 py-2">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">อีเมล</label>
+            <input type="email" id="add-p-email" placeholder="example@huaykhrai.ac.th" class="w-full text-xs border border-slate-300 rounded-xl px-3 py-2">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">บทบาทในระบบ</label>
+          <select id="add-p-role" class="w-full text-xs border border-slate-300 rounded-xl px-3 py-2 bg-white">
+            <option value="teacher">ครูผู้สอน / บุคลากรทั่วไป</option>
+            <option value="academic_head">หัวหน้าฝ่ายบริหารงานวิชาการ</option>
+            <option value="director">ผู้อำนวยการโรงเรียน</option>
+            <option value="admin">ผู้ดูแลระบบ</option>
+          </select>
+        </div>
+
+        <div class="pt-3 border-t border-slate-200 flex justify-end space-x-2">
+          <button type="button" onclick="closeAddPersonnelModal()" class="px-4 py-2 border border-slate-300 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-100">ยกเลิก</button>
+          <button type="submit" class="px-5 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-semibold">บันทึกบุคลากร</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- TOAST NOTIFICATION CONTAINER               -->
+  <!-- ========================================== -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none no-print"></div>
+
+  <!-- ========================================================================================= -->
+  <!-- CLIENT JAVASCRIPT LOGIC                                                                   -->
+  <!-- ========================================================================================= -->
+  <script>
+    // Initial Seed Data (Used for preview mode and fallback when running standalone outside Apps Script)
+    const INITIAL_DATA = {
+      personnelList: [
+        { id: 'p-001', prefix: 'นาย', firstName: 'สมบูรณ์', lastName: 'ศิริวัฒนานนท์', position: 'ผู้อำนวยการโรงเรียน', academicStanding: 'เชี่ยวชาญ', department: 'ฝ่ายบริหารงานทั่วไป', address: '99/4 ม.2 ต.ดงคู่ อ.ศรีสัชนาลัย จ.สุโขทัย 64130', phone: '081-876-5432', email: 'somboon.s@huaykhrai.ac.th', role: 'director', signatureUrl: '', hireDate: '2010-05-15' },
+        { id: 'p-002', prefix: 'นาง', firstName: 'พรรณทิพา', lastName: 'สุริยฉัตร', position: 'ครู', academicStanding: 'ชำนาญการพิเศษ', department: 'ฝ่ายบริหารงานวิชาการ (หัวหน้า)', address: '45/1 ม.5 ต.หาดเสี้ยว อ.ศรีสัชนาลัย จ.สุโขทัย 64130', phone: '089-765-4321', email: 'panthipa.s@huaykhrai.ac.th', role: 'academic_head', signatureUrl: '', hireDate: '2014-06-01' },
+        { id: 'p-003', prefix: 'นาย', firstName: 'ณัฐพงษ์', lastName: 'คงเจริญ', position: 'ครู', academicStanding: 'ชำนาญการ', department: 'กลุ่มสาระการเรียนรู้วิทยาศาสตร์และเทคโนโลยี', address: '12 ม.1 ต.หนองอ้อ อ.ศรีสัชนาลัย จ.สุโขทัย 64130', phone: '084-321-9876', email: 'nattapong.k@huaykhrai.ac.th', role: 'admin', signatureUrl: '', hireDate: '2018-09-10' },
+        { id: 'p-004', prefix: 'นางสาว', firstName: 'กานดา', lastName: 'วรรณประเสริฐ', position: 'ครู', academicStanding: 'ชำนาญการ', department: 'กลุ่มสาระการเรียนรู้ภาษาไทย', address: '78 ม.3 ต.บ้านตึก อ.ศรีสัชนาลัย จ.สุโขทัย 64130', phone: '086-456-7890', email: 'kanda.w@huaykhrai.ac.th', role: 'teacher', signatureUrl: '', hireDate: '2017-10-01' },
+        { id: 'p-005', prefix: 'นาย', firstName: 'วีระชัย', lastName: 'แก้วประดับ', position: 'ครู', academicStanding: 'ชำนาญการพิเศษ', department: 'กลุ่มสาระการเรียนรู้คณิตศาสตร์', address: '150/3 ม.4 ต.สารจิตร อ.ศรีสัชนาลัย จ.สุโขทัย 64130', phone: '082-111-2233', email: 'weerachai.k@huaykhrai.ac.th', role: 'teacher', signatureUrl: '', hireDate: '2012-07-16' },
+        { id: 'p-006', prefix: 'นางสาว', firstName: 'ปรียานุช', lastName: 'แสงสว่าง', position: 'ครูผู้ช่วย', academicStanding: 'ไม่มีวิทยฐานะ (ครูผู้ช่วย)', department: 'กลุ่มสาระการเรียนรู้ภาษาต่างประเทศ', address: '33 ม.2 ต.ป่างิ้ว อ.ศรีสัชนาลัย จ.สุโขทัย 64130', phone: '085-998-8776', email: 'priyanuch.s@huaykhrai.ac.th', role: 'teacher', signatureUrl: '', hireDate: '2023-11-01' },
+        { id: 'p-007', prefix: 'นาย', firstName: 'ชัชวาลย์', lastName: 'ใจภักดี', position: 'ครู', academicStanding: 'ชำนาญการ', department: 'กลุ่มสาระการเรียนรู้สุขศึกษาและพลศึกษา', address: '88 ม.6 ต.แม่สิน อ.ศรีสัชนาลัย จ.สุโขทัย 64130', phone: '087-654-3210', email: 'chatchawal.j@huaykhrai.ac.th', role: 'teacher', signatureUrl: '', hireDate: '2016-03-20' },
+        { id: 'p-008', prefix: 'นางสาว', firstName: 'ศิริพร', lastName: 'ทองคำ', position: 'เจ้าพนักงานธุรการปฏิบัติงาน', academicStanding: 'ปฏิบัติงาน', department: 'งานสารบรรณและธุรการโรงเรียน', address: '55/2 ม.1 ต.ดงคู่ อ.ศรีสัชนาลัย จ.สุโขทัย 64130', phone: '083-222-4455', email: 'siriporn.t@huaykhrai.ac.th', role: 'teacher', signatureUrl: '', hireDate: '2020-01-15' }
+      ],
+      leaveRecords: [
+        {
+          id: 'leave-001', referenceNumber: 'ลร.01/2568', personnelId: 'p-004', leaveType: 'sick', fiscalYear: 2568,
+          startDate: '2025-01-13', endDate: '2025-01-14', totalDays: 2,
+          reason: 'มีอาการไข้หวัด ปวดศีรษะและเจ็บคออย่างรุนแรง แพทย์แนะนำให้พักผ่อนรักษาตัว',
+          contactAddress: '78 ม.3 ต.บ้านตึก อ.ศรีสัชนาลัย จ.สุโขทัย โทร 086-456-7890', contactPhone: '086-456-7890',
+          substitutePersonnelId: 'p-006', substituteAccepted: true, attachmentName: 'medical_cert_kanda.pdf',
+          submittedAt: '2025-01-12T19:30:00Z', applicantSignature: '',
+          academicHeadId: 'p-002', academicHeadComment: 'เห็นควรอนุญาต ได้มอบหมายให้นางสาวปรียานุช แสงสว่าง ปฏิบัติการสอนแทนเรียบร้อยแล้ว',
+          academicHeadSignature: '', academicHeadActionDate: '2025-01-13T07:45:00Z',
+          directorId: 'p-001', directorComment: 'ทราบและอนุมัติ', directorSignature: '', directorActionDate: '2025-01-13T08:15:00Z',
+          status: 'approved'
+        },
+        {
+          id: 'leave-002', referenceNumber: 'ลร.02/2568', personnelId: 'p-005', leaveType: 'personal', fiscalYear: 2568,
+          startDate: '2025-02-06', endDate: '2025-02-07', totalDays: 2,
+          reason: 'เดินทางไปติดต่อราชการเกี่ยวกับที่ดินมรดกและทำนิติกรรม ณ สำนักงานที่ดินจังหวัดสุโขทัย',
+          contactAddress: '150/3 ม.4 ต.สารจิตร อ.ศรีสัชนาลัย จ.สุโขทัย', contactPhone: '082-111-2233',
+          substitutePersonnelId: 'p-003', substituteAccepted: true,
+          submittedAt: '2025-02-03T10:15:00Z', applicantSignature: '',
+          academicHeadId: 'p-002', academicHeadComment: 'เห็นควรอนุญาต ได้ตรวจสอบภาระงานสอนและใบงานมอบหมายแล้ว',
+          academicHeadSignature: '', academicHeadActionDate: '2025-02-03T14:20:00Z',
+          directorId: 'p-001', directorComment: 'อนุมัติ', directorSignature: '', directorActionDate: '2025-02-04T09:00:00Z',
+          status: 'approved'
+        },
+        {
+          id: 'leave-003', referenceNumber: 'ลร.03/2568', personnelId: 'p-007', leaveType: 'personal', fiscalYear: 2568,
+          startDate: '2025-03-24', endDate: '2025-03-26', totalDays: 3,
+          reason: 'พาครอบครัวเดินทางไปตรวจสุขภาพประจำปี ณ โรงพยาบาลศูนย์พุทธชินราช จ.พิษณุโลก',
+          contactAddress: '88 ม.6 ต.แม่สิน อ.ศรีสัชนาลัย จ.สุโขทัย', contactPhone: '087-654-3210',
+          substitutePersonnelId: 'p-005', substituteAccepted: true,
+          submittedAt: '2025-03-18T11:00:00Z', applicantSignature: '',
+          academicHeadId: 'p-002', academicHeadComment: 'เห็นควรอนุญาต ในช่วงเวลาดังกล่าวไม่มีการสอบหรือกิจกรรมเร่งด่วน',
+          academicHeadSignature: '', academicHeadActionDate: '2025-03-18T15:30:00Z',
+          status: 'pending_director'
+        },
+        {
+          id: 'leave-004', referenceNumber: 'ลร.04/2568', personnelId: 'p-006', leaveType: 'sick', fiscalYear: 2568,
+          startDate: '2025-04-07', endDate: '2025-04-07', isHalfDay: true, halfDayPeriod: 'morning', totalDays: 0.5,
+          reason: 'มีนัดทำฟันและพบทันตแพทย์ ณ โรงพยาบาลศรีสัชนาลัย ในช่วงเช้า',
+          contactAddress: '33 ม.2 ต.ป่างิ้ว อ.ศรีสัชนาลัย จ.สุโขทัย', contactPhone: '085-998-8776',
+          substitutePersonnelId: 'p-004', substituteAccepted: true,
+          submittedAt: '2025-04-05T08:30:00Z', applicantSignature: '',
+          status: 'pending_academic'
+        }
+      ],
+      settings: {
+        schoolName: 'โรงเรียนบ้านห้วยไคร้',
+        schoolArea: 'สำนักงานเขตพื้นที่การศึกษาประถมศึกษาสุโขทัย เขต 2',
+        currentFiscalYear: 2568,
+        directorId: 'p-001',
+        academicHeadId: 'p-002',
+        adminId: 'p-003',
+        phone: '055-678901',
+        address: 'หมู่ที่ 2 ตำบลดงคู่ อำเภอศรีสัชนาลัย จังหวัดสุโขทัย 64130',
+        pinCode: '1234',
+        lineChannelAccessToken: '',
+        lineGroupId: '',
+        isLineNotifyEnabled: false,
+        quotas: [
+          { leaveType: 'sick', title: 'ลาป่วย', maxDays: 60, maxTimes: 20 },
+          { leaveType: 'personal', title: 'ลากิจส่วนตัว', maxDays: 45, maxTimes: 15 },
+          { leaveType: 'maternity', title: 'ลาคลอดบุตร', maxDays: 90, maxTimes: 1 },
+          { leaveType: 'ordination', title: 'ลาอุปสมบทหรือไปประกอบพิธีฮัจญ์', maxDays: 120, maxTimes: 1 }
+        ]
+      },
+      auditLogs: [
+        { id: 'log-001', timestamp: '2025-01-12 19:30:00', actorName: 'นางสาวกานดา วรรณประเสริฐ', actorRole: 'ครู', action: 'ยื่นใบลาออนไลน์', details: 'ยื่นคำขอลาป่วย (ลร.01/2568) จำนวน 2 วัน' },
+        { id: 'log-002', timestamp: '2025-01-13 07:45:00', actorName: 'นางพรรณทิพา สุริยฉัตร', actorRole: 'หัวหน้าวิชาการ', action: 'ลงความเห็นการลา', details: 'บันทึกความเห็นชอบใบลา ลร.01/2568 เสนอผู้อำนวยการ' },
+        { id: 'log-003', timestamp: '2025-01-13 08:15:00', actorName: 'นายสมบูรณ์ ศิริวัฒนานนท์', actorRole: 'ผู้อำนวยการโรงเรียน', action: 'อนุมัติการลา', details: 'อนุมัติใบลา ลร.01/2568 สำเร็จ' }
+      ]
+    };
+
+    // State Variables
+    let appPersonnel = [];
+    let appLeaveRecords = [];
+    let appSettings = {};
+    let appAuditLogs = [];
+    let currentUserId = 'p-001'; // Default: Director (นายสมบูรณ์)
+    let isPinUnlocked = false;
+    let pendingProtectedTab = null;
+    let currentCalendarDate = new Date(2025, 0, 1); // January 2025
+
+    // Helper: Generate Default SVG Signature
+    function createDefaultSig(name) {
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="220" height="70" viewBox="0 0 220 70">
+        <path d="M 20 45 Q 60 15, 90 40 T 150 35 T 200 45 M 50 55 Q 110 50, 170 58" fill="none" stroke="#1d4ed8" stroke-width="2.2" stroke-linecap="round"/>
+        <text x="110" y="65" font-family="'Sarabun', sans-serif" font-size="11" fill="#4b5563" text-anchor="middle">(${name})</text>
+      </svg>`;
+      return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+    }
+
+    // Initialize Application
+    window.addEventListener('DOMContentLoaded', () => {
+      initSignaturePads();
+      loadInitialData();
+      setupInitialDates();
+    });
+
+    // Check if running inside Google Apps Script environment
+    function isGoogleAppsScript() {
+      return typeof google !== 'undefined' && google.script && typeof google.script.run !== 'undefined';
+    }
+
+    // Load initial data from server or localStorage
+    function loadInitialData(showToastAlert = false) {
+      const refreshIcon = document.getElementById('refresh-icon');
+      if (refreshIcon) refreshIcon.classList.add('fa-spin');
+
+      if (isGoogleAppsScript()) {
+        document.getElementById('backend-status-badge').innerHTML = `
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>Google Apps Script (Cloud)</span>
+        `;
+        google.script.run
+          .withSuccessHandler(function(response) {
+            if (refreshIcon) refreshIcon.classList.remove('fa-spin');
+            if (response && response.success) {
+              appPersonnel = response.personnelList || [];
+              appLeaveRecords = response.leaveRecords || [];
+              appSettings = response.settings || {};
+              appAuditLogs = response.auditLogs || [];
+              applyLoadedData();
+              if (showToastAlert) showToast('รีเฟรชข้อมูลจาก Google Sheets สำเร็จ', 'success');
+            } else {
+              fallbackToLocal(showToastAlert);
+            }
+          })
+          .withFailureHandler(function(err) {
+            if (refreshIcon) refreshIcon.classList.remove('fa-spin');
+            console.error('GAS Error:', err);
+            fallbackToLocal(showToastAlert);
+          })
+          .getInitialAppData();
+      } else {
+        fallbackToLocal(showToastAlert);
+        if (refreshIcon) refreshIcon.classList.remove('fa-spin');
+      }
+    }
+
+    function fallbackToLocal(showToastAlert) {
+      document.getElementById('backend-status-badge').innerHTML = `
+        <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+        <span>Standalone / Preview Ready</span>
+      `;
+
+      const savedP = localStorage.getItem('gas_leave_personnel');
+      const savedL = localStorage.getItem('gas_leave_records');
+      const savedS = localStorage.getItem('gas_leave_settings');
+      const savedA = localStorage.getItem('gas_leave_audit');
+
+      appPersonnel = savedP ? JSON.parse(savedP) : INITIAL_DATA.personnelList;
+      appLeaveRecords = savedL ? JSON.parse(savedL) : INITIAL_DATA.leaveRecords;
+      appSettings = savedS ? JSON.parse(savedS) : INITIAL_DATA.settings;
+      appAuditLogs = savedA ? JSON.parse(savedA) : INITIAL_DATA.auditLogs;
+
+      // Assign default signature to all personnel if empty
+      appPersonnel.forEach(p => {
+        if (!p.signatureUrl) {
+          p.signatureUrl = createDefaultSig(`${p.prefix}${p.firstName} ${p.lastName}`);
+        }
+      });
+
+      applyLoadedData();
+      if (showToastAlert) showToast('โหลดข้อมูลระบบเรียบร้อยแล้ว', 'info');
+    }
+
+    function applyLoadedData() {
+      // Update School Header
+      if (appSettings.schoolName) {
+        document.getElementById('header-school-name').textContent = appSettings.schoolName;
+        document.getElementById('slip-school-name').textContent = appSettings.schoolName;
+      }
+      if (appSettings.schoolArea) {
+        document.getElementById('header-school-area').textContent = appSettings.schoolArea;
+        document.getElementById('slip-school-area-text').textContent = appSettings.schoolArea;
+      }
+
+      document.getElementById('dash-fiscal-year').textContent = appSettings.currentFiscalYear || 2568;
+      document.getElementById('form-fiscal-year').textContent = appSettings.currentFiscalYear || 2568;
+
+      updateCurrentUserUI();
+      populateSubstituteDropdown();
+      populateSettingsHolders();
+      renderDashboard();
+      renderHistoryTable();
+      renderApprovalCenter();
+      renderPersonnelList();
+      renderCalendar();
+      renderStatistics();
+      renderAuditLogs();
+      syncSettingsFormInputs();
+    }
+
+    function getCurrentUser() {
+      return appPersonnel.find(p => p.id === currentUserId) || appPersonnel[0];
+    }
+
+    function updateCurrentUserUI() {
+      const user = getCurrentUser();
+      if (!user) return;
+
+      const fullName = `${user.prefix}${user.firstName} ${user.lastName}`;
+      document.getElementById('current-user-name').textContent = fullName;
+      document.getElementById('dash-user-name').textContent = fullName;
+      document.getElementById('form-applicant-name').value = fullName;
+      document.getElementById('form-applicant-position').value = `${user.position} ${user.academicStanding || ''}`.trim();
+      document.getElementById('form-applicant-dept').value = user.department || '-';
+
+      // Role badge description
+      let roleLabel = 'ครูผู้สอน';
+      if (user.role === 'director') roleLabel = 'ผู้อำนวยการโรงเรียน (ผู้สั่งการ)';
+      else if (user.role === 'academic_head') roleLabel = 'หัวหน้าฝ่ายวิชาการ (ผู้ลงความเห็น)';
+      else if (user.role === 'admin') roleLabel = 'ผู้ดูแลระบบและครูผู้สอน';
+      document.getElementById('current-user-role-badge').textContent = roleLabel;
+      document.getElementById('approval-current-role-badge').textContent = user.role === 'director' ? 'ผู้อำนวยการโรงเรียน' : (user.role === 'academic_head' ? 'หัวหน้าฝ่ายวิชาการ' : 'ครูผู้สอน');
+
+      // Update Quota labels in leave form
+      const usedSick = calculateUserLeaveDays(user.id, 'sick');
+      const usedPersonal = calculateUserLeaveDays(user.id, 'personal');
+      const maxSick = 60;
+      const maxPersonal = 45;
+      const sickLeft = Math.max(0, maxSick - usedSick);
+      const personalLeft = Math.max(0, maxPersonal - usedPersonal);
+
+      document.getElementById('label-quota-sick').textContent = sickLeft;
+      document.getElementById('label-quota-personal').textContent = personalLeft;
+      document.getElementById('stat-my-sick-left').textContent = sickLeft;
+      document.getElementById('stat-my-personal-left').textContent = personalLeft;
+    }
+
+    function calculateUserLeaveDays(userId, type) {
+      return appLeaveRecords
+        .filter(r => r.personnelId === userId && r.leaveType === type && r.status === 'approved')
+        .reduce((sum, r) => sum + (Number(r.totalDays) || 0), 0);
+    }
+
+    // Tab Switching
+    function switchTab(tabId) {
+      // PIN protection for 'approvals' and 'settings'
+      if ((tabId === 'approvals' || tabId === 'settings') && !isPinUnlocked) {
+        pendingProtectedTab = tabId;
+        openPinModal();
+        return;
+      }
+
+      // Hide all panes
+      document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
+      // Show selected pane
+      const targetPane = document.getElementById(`tab-content-${tabId}`);
+      if (targetPane) targetPane.classList.remove('hidden');
+
+      // Update Nav Buttons
+      document.querySelectorAll('.nav-tab').forEach(btn => {
+        btn.classList.remove('active', 'bg-blue-50', 'text-blue-700', 'font-semibold', 'border', 'border-blue-200');
+        btn.classList.add('text-slate-600', 'hover:text-blue-700', 'hover:bg-slate-100');
+      });
+
+      const activeBtn = document.getElementById(`tab-btn-${tabId}`);
+      if (activeBtn) {
+        activeBtn.classList.remove('text-slate-600', 'hover:text-blue-700', 'hover:bg-slate-100');
+        activeBtn.classList.add('active', 'bg-blue-50', 'text-blue-700', 'font-semibold', 'border', 'border-blue-200');
+      }
+
+      // Specific Tab refreshes
+      if (tabId === 'approvals') renderApprovalCenter();
+      if (tabId === 'calendar') renderCalendar();
+      if (tabId === 'statistics') renderStatistics();
+      if (tabId === 'leave-history') renderHistoryTable();
+    }
+
+    // Populate substitute teachers in Leave Form
+    function populateSubstituteDropdown() {
+      const select = document.getElementById('form-substitute-id');
+      if (!select) return;
+      select.innerHTML = '';
+
+      appPersonnel.forEach(p => {
+        if (p.id !== currentUserId) {
+          const opt = document.createElement('option');
+          opt.value = p.id;
+          opt.textContent = `${p.prefix}${p.firstName} ${p.lastName} (${p.position})`;
+          select.appendChild(opt);
+        }
+      });
+    }
+
+    function populateSettingsHolders() {
+      const dirSelect = document.getElementById('setting-director-id');
+      const acadSelect = document.getElementById('setting-academic-id');
+      if (!dirSelect || !acadSelect) return;
+
+      dirSelect.innerHTML = '';
+      acadSelect.innerHTML = '';
+
+      appPersonnel.forEach(p => {
+        const text = `${p.prefix}${p.firstName} ${p.lastName} (${p.position})`;
+        const opt1 = new Option(text, p.id);
+        const opt2 = new Option(text, p.id);
+        dirSelect.add(opt1);
+        acadSelect.add(opt2);
+      });
+
+      if (appSettings.directorId) dirSelect.value = appSettings.directorId;
+      if (appSettings.academicHeadId) acadSelect.value = appSettings.academicHeadId;
+    }
+
+    // Date initialization for Leave Form
+    function setupInitialDates() {
+      const today = new Date().toISOString().split('T')[0];
+      const startInput = document.getElementById('form-start-date');
+      const endInput = document.getElementById('form-end-date');
+      if (startInput && !startInput.value) startInput.value = today;
+      if (endInput && !endInput.value) endInput.value = today;
+      calculateFormDays();
+    }
+
+    function calculateFormDays() {
+      const startVal = document.getElementById('form-start-date').value;
+      const endVal = document.getElementById('form-end-date').value;
+      const isHalfDay = document.getElementById('form-is-half-day').checked;
+      const totalInput = document.getElementById('form-total-days');
+
+      if (!startVal || !endVal) {
+        totalInput.value = '1';
+        return;
+      }
+
+      if (isHalfDay) {
+        totalInput.value = '0.5';
+        return;
+      }
+
+      const d1 = new Date(startVal);
+      const d2 = new Date(endVal);
+
+      if (d2 < d1) {
+        totalInput.value = '1';
+        return;
+      }
+
+      // Count working days (excluding Saturday & Sunday)
+      let count = 0;
+      let cur = new Date(d1);
+      while (cur <= d2) {
+        const dayOfWeek = cur.getDay();
+        if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Not Sunday (0) or Saturday (6)
+          count++;
+        }
+        cur.setDate(cur.getDate() + 1);
+      }
+      totalInput.value = count > 0 ? count : 1;
+    }
+
+    function toggleHalfDayOption() {
+      const isHalf = document.getElementById('form-is-half-day').checked;
+      const container = document.getElementById('half-day-period-container');
+      if (isHalf) {
+        container.classList.remove('hidden');
+        document.getElementById('form-end-date').value = document.getElementById('form-start-date').value;
+      } else {
+        container.classList.add('hidden');
+      }
+      calculateFormDays();
+    }
+
+    // File selected helper
+    let selectedFileBase64 = null;
+    let selectedFileName = '';
+    function handleFileSelected(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      selectedFileName = file.name;
+      document.getElementById('form-attachment-name-label').textContent = file.name;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        selectedFileBase64 = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Canvas Signature Pads
+    let formPad = { canvas: null, ctx: null, isDrawing: false, hasDrawn: false };
+    let apprPad = { canvas: null, ctx: null, isDrawing: false, hasDrawn: false };
+
+    function initSignaturePads() {
+      setupCanvas('form-signature-canvas', formPad, 'form-signature-placeholder');
+      setupCanvas('approval-signature-canvas', apprPad, null);
+    }
+
+    function setupCanvas(canvasId, padObj, placeholderId) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      padObj.canvas = canvas;
+      padObj.ctx = canvas.getContext('2d');
+      padObj.ctx.lineWidth = 2.5;
+      padObj.ctx.lineCap = 'round';
+      padObj.ctx.lineJoin = 'round';
+      padObj.ctx.strokeStyle = '#1d4ed8';
+
+      const placeholder = placeholderId ? document.getElementById(placeholderId) : null;
+
+      function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return {
+          x: (clientX - rect.left) * (canvas.width / rect.width),
+          y: (clientY - rect.top) * (canvas.height / rect.height)
+        };
+      }
+
+      function start(e) {
+        padObj.isDrawing = true;
+        padObj.hasDrawn = true;
+        if (placeholder) placeholder.style.display = 'none';
+        const pos = getPos(e);
+        padObj.ctx.beginPath();
+        padObj.ctx.moveTo(pos.x, pos.y);
+        e.preventDefault();
+      }
+
+      function move(e) {
+        if (!padObj.isDrawing) return;
+        const pos = getPos(e);
+        padObj.ctx.lineTo(pos.x, pos.y);
+        padObj.ctx.stroke();
+        e.preventDefault();
+      }
+
+      function stop() {
+        padObj.isDrawing = false;
+      }
+
+      canvas.addEventListener('mousedown', start);
+      canvas.addEventListener('mousemove', move);
+      window.addEventListener('mouseup', stop);
+
+      canvas.addEventListener('touchstart', start, { passive: false });
+      canvas.addEventListener('touchmove', move, { passive: false });
+      window.addEventListener('touchend', stop);
+    }
+
+    function clearFormSignaturePad() {
+      if (!formPad.ctx) return;
+      formPad.ctx.clearRect(0, 0, formPad.canvas.width, formPad.canvas.height);
+      formPad.hasDrawn = false;
+      const ph = document.getElementById('form-signature-placeholder');
+      if (ph) ph.style.display = 'flex';
+    }
+
+    function useProfileSignatureForForm() {
+      const user = getCurrentUser();
+      if (!user) return;
+      drawDataUrlOnCanvas(formPad.canvas, formPad.ctx, user.signatureUrl || createDefaultSig(`${user.prefix}${user.firstName} ${user.lastName}`));
+      formPad.hasDrawn = true;
+      const ph = document.getElementById('form-signature-placeholder');
+      if (ph) ph.style.display = 'none';
+    }
+
+    function clearApprovalSignaturePad() {
+      if (!apprPad.ctx) return;
+      apprPad.ctx.clearRect(0, 0, apprPad.canvas.width, apprPad.canvas.height);
+      apprPad.hasDrawn = false;
+    }
+
+    function useProfileSignatureForApproval() {
+      const user = getCurrentUser();
+      if (!user) return;
+      drawDataUrlOnCanvas(apprPad.canvas, apprPad.ctx, user.signatureUrl || createDefaultSig(`${user.prefix}${user.firstName} ${user.lastName}`));
+      apprPad.hasDrawn = true;
+    }
+
+    function drawDataUrlOnCanvas(canvas, ctx, dataUrl) {
+      if (!dataUrl) return;
+      const img = new Image();
+      img.onload = function() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, (canvas.width - img.width) / 2, (canvas.height - img.height) / 2);
+      };
+      img.src = dataUrl;
+    }
+
+    // Submit Leave Form
+    function handleLeaveFormSubmit(e) {
+      e.preventDefault();
+      const user = getCurrentUser();
+      const leaveType = document.querySelector('input[name="leaveType"]:checked').value;
+      const startDate = document.getElementById('form-start-date').value;
+      const endDate = document.getElementById('form-end-date').value;
+      const totalDays = Number(document.getElementById('form-total-days').value) || 1;
+      const isHalfDay = document.getElementById('form-is-half-day').checked;
+      const halfDayPeriod = isHalfDay ? document.querySelector('input[name="halfDayPeriod"]:checked').value : '';
+      const reason = document.getElementById('form-reason').value.trim();
+      const contactAddress = document.getElementById('form-contact-address').value.trim();
+      const contactPhone = document.getElementById('form-contact-phone').value.trim();
+      const substitutePersonnelId = document.getElementById('form-substitute-id').value;
+
+      let applicantSig = '';
+      if (formPad.hasDrawn) {
+        applicantSig = formPad.canvas.toDataURL('image/png');
+      } else if (user.signatureUrl) {
+        applicantSig = user.signatureUrl;
+      } else {
+        applicantSig = createDefaultSig(`${user.prefix}${user.firstName} ${user.lastName}`);
+      }
+
+      const payload = {
+        personnelId: user.id,
+        applicantName: `${user.prefix}${user.firstName} ${user.lastName}`,
+        leaveType: leaveType,
+        fiscalYear: appSettings.currentFiscalYear || 2568,
+        startDate: startDate,
+        endDate: endDate,
+        isHalfDay: isHalfDay,
+        halfDayPeriod: halfDayPeriod,
+        totalDays: totalDays,
+        reason: reason,
+        contactAddress: contactAddress,
+        contactPhone: contactPhone,
+        substitutePersonnelId: substitutePersonnelId,
+        substituteAccepted: true,
+        attachmentName: selectedFileName,
+        applicantSignature: applicantSig
+      };
+
+      const btn = document.getElementById('form-submit-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึกข้อมูล...';
+
+      if (isGoogleAppsScript()) {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ยื่นใบลาต่อผู้บังคับบัญชา';
+            if (res && res.success) {
+              showToast(res.message || 'ยื่นใบลาสำเร็จ', 'success');
+              loadInitialData(false);
+              resetLeaveForm();
+              switchTab('leave-history');
+            } else {
+              showToast(res.message || 'เกิดข้อผิดพลาดในการบันทึก', 'error');
+            }
+          })
+          .withFailureHandler(function(err) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ยื่นใบลาต่อผู้บังคับบัญชา';
+            showToast('ข้อผิดพลาด: ' + err.toString(), 'error');
+          })
+          .submitLeaveRecord(payload);
+      } else {
+        // Standalone Local Mode
+        setTimeout(() => {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ยื่นใบลาต่อผู้บังคับบัญชา';
+
+          const newNum = appLeaveRecords.length + 1;
+          const ref = `ลร.${newNum < 10 ? '0' + newNum : newNum}/${appSettings.currentFiscalYear || 2568}`;
+          const newRecord = {
+            ...payload,
+            id: 'leave-' + new Date().getTime(),
+            referenceNumber: ref,
+            submittedAt: new Date().toISOString(),
+            status: 'pending_academic'
+          };
+
+          appLeaveRecords.unshift(newRecord);
+          localStorage.setItem('gas_leave_records', JSON.stringify(appLeaveRecords));
+
+          // Log Audit
+          const audit = {
+            id: 'log-' + new Date().getTime(),
+            timestamp: new Date().toLocaleString('th-TH'),
+            actorName: payload.applicantName,
+            actorRole: 'ครู/บุคลากร',
+            action: 'ยื่นใบลาออนไลน์',
+            details: `ยื่นคำขอ${getThaiLeaveType(payload.leaveType)} (${ref}) จำนวน ${payload.totalDays} วัน`
+          };
+          appAuditLogs.unshift(audit);
+          localStorage.setItem('gas_leave_audit', JSON.stringify(appAuditLogs));
+
+          applyLoadedData();
+          showToast(`ยื่นใบลาสำเร็จ เลขที่ ${ref}`, 'success');
+          resetLeaveForm();
+          switchTab('leave-history');
+        }, 500);
+      }
+    }
+
+    function resetLeaveForm() {
+      document.getElementById('form-reason').value = '';
+      document.getElementById('form-contact-address').value = '';
+      document.getElementById('form-contact-phone').value = '';
+      document.getElementById('form-is-half-day').checked = false;
+      document.getElementById('half-day-period-container').classList.add('hidden');
+      document.getElementById('form-attachment-file').value = '';
+      document.getElementById('form-attachment-name-label').textContent = '';
+      selectedFileBase64 = null;
+      selectedFileName = '';
+      clearFormSignaturePad();
+      setupInitialDates();
+    }
+
+    // Render Dashboard
+    function renderDashboard() {
+      const totalCount = appLeaveRecords.length;
+      const pendingCount = appLeaveRecords.filter(r => r.status === 'pending_academic' || r.status === 'pending_director').length;
+      const approvedCount = appLeaveRecords.filter(r => r.status === 'approved').length;
+
+      document.getElementById('stat-total-leaves').textContent = totalCount;
+      document.getElementById('stat-pending-leaves').textContent = pendingCount;
+      document.getElementById('stat-approved-leaves').textContent = approvedCount;
+
+      // Update badge in Approvals nav tab
+      const badge = document.getElementById('pending-approval-badge');
+      if (pendingCount > 0) {
+        badge.textContent = pendingCount;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+
+      // Recent 5 leaves in table
+      const recentTbody = document.getElementById('dashboard-recent-table');
+      recentTbody.innerHTML = '';
+
+      const recentFive = appLeaveRecords.slice(0, 5);
+      if (recentFive.length === 0) {
+        recentTbody.innerHTML = '<tr><td colspan="6" class="py-6 text-center text-slate-400">ยังไม่มีรายการใบลา</td></tr>';
+        return;
+      }
+
+      recentFive.forEach(r => {
+        const applicant = appPersonnel.find(p => p.id === r.personnelId);
+        const name = applicant ? `${applicant.prefix}${applicant.firstName} ${applicant.lastName}` : 'บุคลากร';
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/70 transition';
+        tr.innerHTML = `
+          <td class="py-3 px-3 font-semibold text-blue-700">${r.referenceNumber}</td>
+          <td class="py-3 px-3">${name}</td>
+          <td class="py-3 px-3">${getLeaveTypeBadge(r.leaveType)}</td>
+          <td class="py-3 px-3 text-slate-600">${formatThaiDate(r.startDate)} - ${formatThaiDate(r.endDate)}</td>
+          <td class="py-3 px-3 text-center">${getStatusBadge(r.status)}</td>
+          <td class="py-3 px-3 text-right">
+            <button onclick="viewOfficialSlip('${r.id}')" class="px-2.5 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-100 rounded-lg transition">
+              <i class="fa-solid fa-print mr-1"></i> พิมพ์
+            </button>
+          </td>
+        `;
+        recentTbody.appendChild(tr);
+      });
+    }
+
+    // Render History Table
+    function renderHistoryTable() {
+      const typeFilter = document.getElementById('filter-history-type').value;
+      const statusFilter = document.getElementById('filter-history-status').value;
+      const scopeFilter = document.getElementById('filter-history-scope').value;
+
+      const tbody = document.getElementById('history-table-body');
+      tbody.innerHTML = '';
+
+      let list = [...appLeaveRecords];
+      if (scopeFilter === 'my') {
+        list = list.filter(r => r.personnelId === currentUserId);
+      }
+      if (typeFilter !== 'all') {
+        list = list.filter(r => r.leaveType === typeFilter);
+      }
+      if (statusFilter !== 'all') {
+        list = list.filter(r => r.status === statusFilter);
+      }
+
+      if (list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-slate-400">ไม่พบรายการใบลาตามเงื่อนไขที่เลือก</td></tr>';
+        return;
+      }
+
+      list.forEach(r => {
+        const applicant = appPersonnel.find(p => p.id === r.personnelId);
+        const name = applicant ? `${applicant.prefix}${applicant.firstName} ${applicant.lastName}` : 'บุคลากร';
+        const isMyLeave = r.personnelId === currentUserId;
+        const canCancel = isMyLeave && (r.status === 'pending_academic' || r.status === 'pending_director');
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/70 transition';
+        tr.innerHTML = `
+          <td class="py-3.5 px-3 font-semibold text-blue-700">${r.referenceNumber}</td>
+          <td class="py-3.5 px-3">
+            <div class="font-medium text-slate-800">${name}</div>
+            <div class="text-[11px] text-slate-400">${applicant?.position || ''}</div>
+          </td>
+          <td class="py-3.5 px-3">${getLeaveTypeBadge(r.leaveType)}</td>
+          <td class="py-3.5 px-3 text-slate-600">
+            ${formatThaiDate(r.startDate)} ${r.startDate !== r.endDate ? 'ถึง ' + formatThaiDate(r.endDate) : ''}
+            ${r.isHalfDay ? '<span class="text-[10px] text-indigo-600 block">(ครึ่งวัน)</span>' : ''}
+          </td>
+          <td class="py-3.5 px-3 text-center font-bold text-slate-700">${r.totalDays} วัน</td>
+          <td class="py-3.5 px-3 text-center">${getStatusBadge(r.status)}</td>
+          <td class="py-3.5 px-3 text-right space-x-1">
+            <button onclick="viewOfficialSlip('${r.id}')" title="ดูและพิมพ์แบบใบลา A4" class="px-2.5 py-1 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition">
+              <i class="fa-solid fa-file-lines mr-1"></i> ใบลา
+            </button>
+            ${canCancel ? `
+              <button onclick="cancelLeave('${r.id}', '${r.referenceNumber}')" title="ยกเลิกใบลา" class="px-2 py-1 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-lg transition">
+                <i class="fa-solid fa-ban"></i>
+              </button>
+            ` : ''}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Render Approval Center Cards
+    function renderApprovalCenter() {
+      const user = getCurrentUser();
+      const container = document.getElementById('approval-cards-container');
+      container.innerHTML = '';
+
+      // Find pending records
+      const pendingList = appLeaveRecords.filter(r => r.status === 'pending_academic' || r.status === 'pending_director');
+
+      if (pendingList.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+            <i class="fa-solid fa-circle-check text-emerald-500 text-3xl mb-2"></i>
+            <h4 class="font-bold text-slate-700 text-sm">ไม่มีรายการที่รอการพิจารณา</h4>
+            <p class="text-xs text-slate-400 mt-1">รายการใบลาทั้งหมดได้รับการตรวจสอบและสั่งการเรียบร้อยแล้ว</p>
+          </div>
+        `;
+        return;
+      }
+
+      pendingList.forEach(r => {
+        const applicant = appPersonnel.find(p => p.id === r.personnelId);
+        const name = applicant ? `${applicant.prefix}${applicant.firstName} ${applicant.lastName}` : 'บุคลากร';
+        const sub = appPersonnel.find(p => p.id === r.substitutePersonnelId);
+        const subName = sub ? `${sub.prefix}${sub.firstName} ${sub.lastName}` : 'ไม่มีระบุ';
+
+        const isStageAcademic = r.status === 'pending_academic';
+        const isStageDirector = r.status === 'pending_director';
+
+        const card = document.createElement('div');
+        card.className = 'border border-slate-200 rounded-2xl p-5 bg-white shadow-xs hover:border-blue-300 transition';
+        card.innerHTML = `
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="font-bold text-blue-700 text-base">${r.referenceNumber}</span>
+                ${getLeaveTypeBadge(r.leaveType)}
+                ${getStatusBadge(r.status)}
+              </div>
+              <h4 class="font-bold text-slate-800 text-sm sm:text-base mt-1">${name} (${applicant?.position || ''})</h4>
+            </div>
+            <div class="text-right">
+              <span class="text-xs text-slate-400">ยื่นเมื่อ: ${formatThaiDateTime(r.submittedAt)}</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 py-3 text-xs">
+            <div>
+              <p><span class="text-slate-500">ช่วงวันที่ลา:</span> <span class="font-semibold text-slate-800">${formatThaiDate(r.startDate)} ถึง ${formatThaiDate(r.endDate)} (${r.totalDays} วัน)</span></p>
+              <p class="mt-1"><span class="text-slate-500">เหตุผล:</span> <span class="text-slate-700">${r.reason}</span></p>
+            </div>
+            <div>
+              <p><span class="text-slate-500">ครูผู้สอนแทน:</span> <span class="font-medium text-slate-800">${subName}</span></p>
+              <p class="mt-1"><span class="text-slate-500">ติดต่อ:</span> <span class="text-slate-700">${r.contactPhone}</span></p>
+            </div>
+          </div>
+
+          ${isStageDirector && r.academicHeadComment ? `
+            <div class="p-3 bg-blue-50/70 rounded-xl border border-blue-100 text-xs mb-3">
+              <span class="font-bold text-blue-900 block mb-0.5">ความเห็นหัวหน้าฝ่ายวิชาการ (นางพรรณทิพา สุริยฉัตร):</span>
+              <p class="text-blue-800">${r.academicHeadComment}</p>
+            </div>
+          ` : ''}
+
+          <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+            <button onclick="viewOfficialSlip('${r.id}')" class="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1">
+              <i class="fa-solid fa-file-lines"></i>
+              <span>ดูแบบใบลาฉบับเต็ม</span>
+            </button>
+
+            <div class="flex items-center space-x-2">
+              <button onclick="openApprovalModal('${r.id}', '${isStageAcademic ? 'academic' : 'director'}')" class="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center gap-1.5 transition">
+                <i class="fa-solid fa-signature"></i>
+                <span>${isStageAcademic ? 'ลงความเห็นวิชาการ' : 'สั่งการอนุมัติ (ผอ.)'}</span>
+              </button>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // Open Approval Modal
+    function openApprovalModal(recordId, stage) {
+      const record = appLeaveRecords.find(r => r.id === recordId);
+      if (!record) return;
+
+      const applicant = appPersonnel.find(p => p.id === record.personnelId);
+      const name = applicant ? `${applicant.prefix}${applicant.firstName} ${applicant.lastName}` : 'บุคลากร';
+
+      document.getElementById('modal-approval-record-id').value = recordId;
+      document.getElementById('modal-approval-stage').value = stage;
+      document.getElementById('modal-appr-ref').textContent = record.referenceNumber;
+      document.getElementById('modal-appr-applicant').textContent = `${name} (${applicant?.position || ''})`;
+      document.getElementById('modal-appr-type-dates').textContent = `${getThaiLeaveType(record.leaveType)} | ${formatThaiDate(record.startDate)} - ${formatThaiDate(record.endDate)} (${record.totalDays} วัน)`;
+      document.getElementById('modal-appr-reason').textContent = record.reason;
+
+      const titleEl = document.getElementById('approval-modal-title');
+      const commentInput = document.getElementById('modal-approval-comment');
+      const approveLabel = document.getElementById('decision-approve-label');
+
+      if (stage === 'academic') {
+        titleEl.innerHTML = '<i class="fa-solid fa-stamp text-amber-400"></i> บันทึกความเห็นหัวหน้าฝ่ายวิชาการ';
+        approveLabel.textContent = 'เห็นควรอนุญาต';
+        commentInput.value = 'เห็นควรอนุญาต ได้ตรวจสอบภาระงานสอนและใบงานมอบหมายเรียบร้อยแล้ว';
+      } else {
+        titleEl.innerHTML = '<i class="fa-solid fa-signature text-emerald-400"></i> สั่งการอนุมัติ (ผู้อำนวยการโรงเรียน)';
+        approveLabel.textContent = 'อนุมัติ';
+        commentInput.value = 'ทราบและอนุมัติ';
+      }
+
+      clearApprovalSignaturePad();
+      document.getElementById('approval-action-modal').classList.remove('hidden');
+    }
+
+    function closeApprovalModal() {
+      document.getElementById('approval-action-modal').classList.add('hidden');
+    }
+
+    function handleApprovalSubmit(e) {
+      e.preventDefault();
+      const user = getCurrentUser();
+      const recordId = document.getElementById('modal-approval-record-id').value;
+      const stage = document.getElementById('modal-approval-stage').value;
+      const decision = document.querySelector('input[name="approvalDecision"]:checked').value;
+      const comment = document.getElementById('modal-approval-comment').value.trim();
+
+      const record = appLeaveRecords.find(r => r.id === recordId);
+      if (!record) return;
+
+      let signature = '';
+      if (apprPad.hasDrawn) {
+        signature = apprPad.canvas.toDataURL('image/png');
+      } else if (user.signatureUrl) {
+        signature = user.signatureUrl;
+      } else {
+        signature = createDefaultSig(`${user.prefix}${user.firstName} ${user.lastName}`);
+      }
+
+      const submitBtn = document.getElementById('modal-approval-submit-btn');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึก...';
+
+      if (stage === 'academic') {
+        const payload = {
+          recordId: recordId,
+          referenceNumber: record.referenceNumber,
+          academicHeadId: user.id,
+          actorName: `${user.prefix}${user.firstName} ${user.lastName}`,
+          action: decision === 'approve' ? 'recommend' : 'reject',
+          comment: comment,
+          signature: signature
+        };
+
+        if (isGoogleAppsScript()) {
+          google.script.run
+            .withSuccessHandler(function(res) {
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> ยืนยันการพิจารณา';
+              closeApprovalModal();
+              showToast(res.message || 'บันทึกสำเร็จ', 'success');
+              loadInitialData(false);
+            })
+            .withFailureHandler(function(err) {
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> ยืนยันการพิจารณา';
+              showToast('เกิดข้อผิดพลาด: ' + err.toString(), 'error');
+            })
+            .reviewLeaveRecord(payload);
+        } else {
+          // Local fallback
+          setTimeout(() => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> ยืนยันการพิจารณา';
+            record.academicHeadId = user.id;
+            record.academicHeadComment = comment;
+            record.academicHeadSignature = signature;
+            record.academicHeadActionDate = new Date().toISOString();
+            record.status = decision === 'approve' ? 'pending_director' : 'rejected';
+            localStorage.setItem('gas_leave_records', JSON.stringify(appLeaveRecords));
+
+            // Log
+            appAuditLogs.unshift({
+              id: 'log-' + new Date().getTime(),
+              timestamp: new Date().toLocaleString('th-TH'),
+              actorName: `${user.prefix}${user.firstName} ${user.lastName}`,
+              actorRole: 'หัวหน้าวิชาการ',
+              action: 'ลงความเห็นการลา',
+              details: `${decision === 'approve' ? 'เห็นควรอนุญาต' : 'ไม่เห็นควรอนุญาต'} ใบลา ${record.referenceNumber}: ${comment}`
+            });
+            localStorage.setItem('gas_leave_audit', JSON.stringify(appAuditLogs));
+
+            closeApprovalModal();
+            applyLoadedData();
+            showToast('บันทึกความเห็นวิชาการเรียบร้อยแล้ว', 'success');
+          }, 400);
+        }
+      } else {
+        // Director Stage
+        const payload = {
+          recordId: recordId,
+          referenceNumber: record.referenceNumber,
+          directorId: user.id,
+          actorName: `${user.prefix}${user.firstName} ${user.lastName}`,
+          action: decision,
+          comment: comment,
+          signature: signature
+        };
+
+        if (isGoogleAppsScript()) {
+          google.script.run
+            .withSuccessHandler(function(res) {
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> ยืนยันการพิจารณา';
+              closeApprovalModal();
+              showToast(res.message || 'บันทึกคำสั่งสำเร็จ', 'success');
+              loadInitialData(false);
+            })
+            .withFailureHandler(function(err) {
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> ยืนยันการพิจารณา';
+              showToast('เกิดข้อผิดพลาด: ' + err.toString(), 'error');
+            })
+            .approveLeaveRecord(payload);
+        } else {
+          // Local fallback
+          setTimeout(() => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> ยืนยันการพิจารณา';
+            record.directorId = user.id;
+            record.directorComment = comment;
+            record.directorSignature = signature;
+            record.directorActionDate = new Date().toISOString();
+            record.status = decision === 'approve' ? 'approved' : 'rejected';
+            localStorage.setItem('gas_leave_records', JSON.stringify(appLeaveRecords));
+
+            // Log
+            appAuditLogs.unshift({
+              id: 'log-' + new Date().getTime(),
+              timestamp: new Date().toLocaleString('th-TH'),
+              actorName: `${user.prefix}${user.firstName} ${user.lastName}`,
+              actorRole: 'ผู้อำนวยการโรงเรียน',
+              action: decision === 'approve' ? 'อนุมัติการลา' : 'ไม่อนุมัติการลา',
+              details: `${decision === 'approve' ? 'อนุมัติ' : 'ไม่อนุมัติ'} ใบลา ${record.referenceNumber}: ${comment}`
+            });
+            localStorage.setItem('gas_leave_audit', JSON.stringify(appAuditLogs));
+
+            closeApprovalModal();
+            applyLoadedData();
+            showToast(`สั่งการ ${decision === 'approve' ? 'อนุมัติ' : 'ไม่อนุมัติ'} เรียบร้อยแล้ว`, 'success');
+          }, 400);
+        }
+      }
+    }
+
+    // Cancel Leave Record
+    function cancelLeave(recordId, ref) {
+      if (!confirm(`ท่านต้องการยกเลิกคำขอลา ${ref} ใช่หรือไม่?`)) return;
+
+      const user = getCurrentUser();
+      const payload = {
+        recordId: recordId,
+        referenceNumber: ref,
+        reason: 'ผู้ขอยกเลิกความจำเป็น',
+        cancelledBy: `${user.prefix}${user.firstName} ${user.lastName}`,
+        actorName: `${user.prefix}${user.firstName} ${user.lastName}`
+      };
+
+      if (isGoogleAppsScript()) {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            showToast('ยกเลิกใบลาเรียบร้อยแล้ว', 'info');
+            loadInitialData(false);
+          })
+          .withFailureHandler(function(err) {
+            showToast('เกิดข้อผิดพลาด: ' + err.toString(), 'error');
+          })
+          .cancelLeaveRecord(payload);
+      } else {
+        const record = appLeaveRecords.find(r => r.id === recordId);
+        if (record) {
+          record.status = 'cancelled';
+          record.cancellationReason = payload.reason;
+          record.cancelledBy = payload.cancelledBy;
+          record.cancelledAt = new Date().toISOString();
+          localStorage.setItem('gas_leave_records', JSON.stringify(appLeaveRecords));
+
+          appAuditLogs.unshift({
+            id: 'log-' + new Date().getTime(),
+            timestamp: new Date().toLocaleString('th-TH'),
+            actorName: payload.cancelledBy,
+            actorRole: 'ครู/บุคลากร',
+            action: 'ยกเลิกใบลา',
+            details: `ขอยกเลิกใบลา ${ref}`
+          });
+          localStorage.setItem('gas_leave_audit', JSON.stringify(appAuditLogs));
+
+          applyLoadedData();
+          showToast('ยกเลิกใบลาเรียบร้อยแล้ว', 'info');
+        }
+      }
+    }
+
+    // View Official A4 Slip Modal
+    function viewOfficialSlip(recordId) {
+      const record = appLeaveRecords.find(r => r.id === recordId);
+      if (!record) return;
+
+      const applicant = appPersonnel.find(p => p.id === record.personnelId);
+      const substitute = appPersonnel.find(p => p.id === record.substitutePersonnelId);
+      const academic = appPersonnel.find(p => p.id === (record.academicHeadId || appSettings.academicHeadId));
+      const director = appPersonnel.find(p => p.id === (record.directorId || appSettings.directorId));
+
+      const appName = applicant ? `${applicant.prefix}${applicant.firstName} ${applicant.lastName}` : '-';
+      const subName = substitute ? `${substitute.prefix}${substitute.firstName} ${substitute.lastName}` : '-';
+
+      document.getElementById('modal-slip-ref-title').textContent = record.referenceNumber;
+      document.getElementById('slip-applicant-name').textContent = appName;
+      document.getElementById('slip-applicant-name-bracket').textContent = appName;
+      document.getElementById('slip-applicant-position').textContent = `${applicant?.position || ''} ${applicant?.academicStanding || ''}`.trim();
+      document.getElementById('slip-applicant-position-bracket').textContent = applicant?.position || '-';
+      document.getElementById('slip-applicant-dept').textContent = applicant?.department || 'โรงเรียนบ้านห้วยไคร้';
+
+      // Written Date (Thai date format)
+      const subDate = new Date(record.submittedAt || record.startDate);
+      document.getElementById('slip-written-day').textContent = subDate.getDate();
+      document.getElementById('slip-written-month').textContent = getThaiMonthName(subDate.getMonth());
+      document.getElementById('slip-written-year').textContent = subDate.getFullYear() + 543;
+
+      document.getElementById('slip-leave-subject').textContent = `ขอ${getThaiLeaveType(record.leaveType)}`;
+      document.getElementById('slip-leave-type-desc').textContent = getThaiLeaveType(record.leaveType);
+      document.getElementById('slip-leave-reason').textContent = record.reason;
+      document.getElementById('slip-start-date').textContent = formatThaiDate(record.startDate);
+      document.getElementById('slip-end-date').textContent = formatThaiDate(record.endDate);
+      document.getElementById('slip-total-days').textContent = record.totalDays;
+      document.getElementById('slip-contact-address').textContent = record.contactAddress || '-';
+      document.getElementById('slip-contact-phone').textContent = record.contactPhone || '-';
+
+      // Substitute
+      document.getElementById('slip-substitute-name').textContent = subName;
+      document.getElementById('slip-substitute-name-bracket').textContent = subName;
+
+      // Signatures
+      const applicantSig = record.applicantSignature || applicant?.signatureUrl || createDefaultSig(appName);
+      const subSig = substitute?.signatureUrl || createDefaultSig(subName);
+      const acadSig = record.academicHeadSignature || academic?.signatureUrl || createDefaultSig('นางพรรณทิพา สุริยฉัตร');
+      const dirSig = record.directorSignature || director?.signatureUrl || createDefaultSig('นายสมบูรณ์ ศิริวัฒนานนท์');
+
+      document.getElementById('slip-applicant-sig-img').src = applicantSig;
+      document.getElementById('slip-substitute-sig-img').src = subSig;
+      document.getElementById('slip-academic-sig-img').src = acadSig;
+      document.getElementById('slip-director-sig-img').src = dirSig;
+
+      // Past statistics
+      const pastSick = calculateUserLeaveDays(record.personnelId, 'sick');
+      const pastPersonal = calculateUserLeaveDays(record.personnelId, 'personal');
+
+      document.getElementById('slip-stat-sick-past').textContent = `${pastSick} วัน`;
+      document.getElementById('slip-stat-pers-past').textContent = `${pastPersonal} วัน`;
+
+      if (record.leaveType === 'sick') {
+        document.getElementById('slip-stat-sick-current').textContent = `${record.totalDays} วัน`;
+        document.getElementById('slip-stat-sick-total').textContent = `${pastSick + record.totalDays} วัน`;
+        document.getElementById('slip-stat-pers-current').textContent = '-';
+        document.getElementById('slip-stat-pers-total').textContent = `${pastPersonal} วัน`;
+      } else if (record.leaveType === 'personal') {
+        document.getElementById('slip-stat-sick-current').textContent = '-';
+        document.getElementById('slip-stat-sick-total').textContent = `${pastSick} วัน`;
+        document.getElementById('slip-stat-pers-current').textContent = `${record.totalDays} วัน`;
+        document.getElementById('slip-stat-pers-total').textContent = `${pastPersonal + record.totalDays} วัน`;
+      }
+
+      // Academic Comment
+      document.getElementById('slip-academic-comment').textContent = record.academicHeadComment || 'เห็นควรอนุญาต ได้ตรวจสอบภาระงานสอนและใบงานมอบหมายแล้ว';
+      document.getElementById('slip-academic-date').textContent = record.academicHeadActionDate ? `วันที่ ${formatThaiDate(record.academicHeadActionDate.split('T')[0])}` : 'วันที่ ......./......./.......';
+
+      // Director Decision
+      const isApproved = record.status === 'approved';
+      document.getElementById('slip-check-approved').checked = isApproved;
+      document.getElementById('slip-check-rejected').checked = record.status === 'rejected';
+      document.getElementById('slip-director-note').textContent = record.directorComment || (isApproved ? 'อนุมัติ' : '');
+      document.getElementById('slip-director-date').textContent = record.directorActionDate ? `วันที่ ${formatThaiDate(record.directorActionDate.split('T')[0])}` : 'วันที่ ......./......./.......';
+
+      document.getElementById('official-slip-modal').classList.remove('hidden');
+    }
+
+    function closeOfficialSlipModal() {
+      document.getElementById('official-slip-modal').classList.add('hidden');
+    }
+
+    // Render Personnel Cards
+    function renderPersonnelList() {
+      const container = document.getElementById('personnel-cards-container');
+      container.innerHTML = '';
+
+      appPersonnel.forEach(p => {
+        const usedSick = calculateUserLeaveDays(p.id, 'sick');
+        const usedPers = calculateUserLeaveDays(p.id, 'personal');
+
+        const card = document.createElement('div');
+        card.className = 'bg-white rounded-2xl border border-slate-200 p-5 shadow-xs hover:border-blue-300 transition flex flex-col justify-between';
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center space-x-3 mb-3">
+              <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white font-bold flex items-center justify-center text-lg flex-shrink-0 shadow-sm">
+                ${p.firstName.charAt(0)}
+              </div>
+              <div>
+                <h4 class="font-bold text-slate-800 text-sm sm:text-base leading-tight">${p.prefix}${p.firstName} ${p.lastName}</h4>
+                <p class="text-xs text-blue-700 font-medium">${p.position} ${p.academicStanding ? `(${p.academicStanding})` : ''}</p>
+              </div>
+            </div>
+            <div class="text-xs text-slate-600 space-y-1 my-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+              <p><i class="fa-solid fa-graduation-cap text-slate-400 w-4"></i> ${p.department || 'ฝ่ายทั่วไป'}</p>
+              <p><i class="fa-solid fa-phone text-slate-400 w-4"></i> ${p.phone || '-'}</p>
+              <p><i class="fa-solid fa-envelope text-slate-400 w-4"></i> ${p.email || '-'}</p>
+            </div>
+          </div>
+
+          <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+            <span class="text-slate-500">วันลาที่ใช้:</span>
+            <div class="space-x-1.5 font-semibold">
+              <span class="text-rose-600">ป่วย ${usedSick} วัน</span>
+              <span class="text-slate-300">|</span>
+              <span class="text-amber-600">กิจ ${usedPers} วัน</span>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // Add Personnel Modal
+    function openAddPersonnelModal() {
+      document.getElementById('add-personnel-modal').classList.remove('hidden');
+    }
+    function closeAddPersonnelModal() {
+      document.getElementById('add-personnel-modal').classList.add('hidden');
+    }
+
+    function handleAddPersonnelSubmit(e) {
+      e.preventDefault();
+      const newP = {
+        id: 'p-' + new Date().getTime(),
+        prefix: document.getElementById('add-p-prefix').value.trim(),
+        firstName: document.getElementById('add-p-firstname').value.trim(),
+        lastName: document.getElementById('add-p-lastname').value.trim(),
+        position: document.getElementById('add-p-position').value.trim(),
+        academicStanding: document.getElementById('add-p-academic').value.trim(),
+        department: document.getElementById('add-p-department').value.trim(),
+        phone: document.getElementById('add-p-phone').value.trim(),
+        email: document.getElementById('add-p-email').value.trim(),
+        role: document.getElementById('add-p-role').value,
+        signatureUrl: '',
+        hireDate: new Date().toISOString().split('T')[0]
+      };
+      newP.signatureUrl = createDefaultSig(`${newP.prefix}${newP.firstName} ${newP.lastName}`);
+
+      appPersonnel.push(newP);
+
+      if (isGoogleAppsScript()) {
+        google.script.run
+          .withSuccessHandler(function() {
+            showToast('บันทึกบุคลากรใหม่เรียบร้อยแล้ว', 'success');
+            loadInitialData(false);
+          })
+          .savePersonnelList(appPersonnel);
+      } else {
+        localStorage.setItem('gas_leave_personnel', JSON.stringify(appPersonnel));
+        showToast('บันทึกบุคลากรใหม่เรียบร้อยแล้ว', 'success');
+      }
+
+      closeAddPersonnelModal();
+      applyLoadedData();
+    }
+
+    // Render Calendar
+    const THAI_HOLIDAYS_2025 = [
+      { date: '2025-01-01', name: 'วันขึ้นปีใหม่' },
+      { date: '2025-01-16', name: 'วันครู' },
+      { date: '2025-02-12', name: 'วันมาฆบูชา' },
+      { date: '2025-04-06', name: 'วันจักรี' },
+      { date: '2025-04-07', name: 'ชดเชยวันจักรี' },
+      { date: '2025-04-13', name: 'วันสงกรานต์' },
+      { date: '2025-04-14', name: 'วันสงกรานต์' },
+      { date: '2025-04-15', name: 'วันสงกรานต์' },
+      { date: '2025-04-16', name: 'ชดเชยสงกรานต์' },
+      { date: '2025-05-01', name: 'วันแรงงาน' },
+      { date: '2025-05-05', name: 'ชดเชยวันฉัตรมงคล' },
+      { date: '2025-05-12', name: 'ชดเชยวันวิสาขบูชา' },
+      { date: '2025-06-03', name: 'วันเฉลิมฯ พระราชินี' },
+      { date: '2025-07-10', name: 'วันอาสาฬหบูชา' },
+      { date: '2025-07-11', name: 'วันเข้าพรรษา' },
+      { date: '2025-07-28', name: 'วันเฉลิมฯ ร.10' },
+      { date: '2025-08-12', name: 'วันแม่แห่งชาติ' },
+      { date: '2025-10-13', name: 'วันนวมินทรมหาราช' },
+      { date: '2025-10-23', name: 'วันปิยมหาราช' },
+      { date: '2025-12-05', name: 'วันพ่อแห่งชาติ' },
+      { date: '2025-12-10', name: 'วันรัฐธรรมนูญ' },
+      { date: '2025-12-31', name: 'วันสิ้นปี' }
+    ];
+
+    function changeCalendarMonth(delta) {
+      currentCalendarDate.setMonth(currentCalendarDate.getMonth() + delta);
+      renderCalendar();
+    }
+
+    function renderCalendar() {
+      const year = currentCalendarDate.getFullYear();
+      const month = currentCalendarDate.getMonth();
+
+      document.getElementById('calendar-month-year-label').textContent = `${getThaiMonthName(month)} ${year + 543}`;
+
+      const grid = document.getElementById('calendar-grid-cells');
+      grid.innerHTML = '';
+
+      const firstDayIndex = new Date(year, month, 1).getDay();
+      const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
+
+      // Empty padding cells before 1st of month
+      for (let i = 0; i < firstDayIndex; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'h-24 sm:h-28 bg-slate-50/50 rounded-xl border border-slate-100 opacity-40';
+        grid.appendChild(cell);
+      }
+
+      // Cells for days of the month
+      for (let day = 1; day <= totalDaysInMonth; day++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const dayDate = new Date(year, month, day);
+        const dayOfWeek = dayDate.getDay();
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
+        const holiday = THAI_HOLIDAYS_2025.find(h => h.date === dateStr);
+
+        // Leaves active on this day
+        const dayLeaves = appLeaveRecords.filter(r => {
+          if (r.status !== 'approved' && r.status !== 'pending_academic' && r.status !== 'pending_director') return false;
+          return dateStr >= r.startDate && dateStr <= r.endDate;
+        });
+
+        const cell = document.createElement('div');
+        cell.className = `h-24 sm:h-28 rounded-xl border p-1.5 flex flex-col justify-between overflow-hidden transition ${
+          isWeekend ? 'bg-slate-50/80 border-slate-200' : 'bg-white border-slate-200 hover:border-blue-400'
+        }`;
+
+        let leavesHtml = '';
+        dayLeaves.slice(0, 2).forEach(l => {
+          const p = appPersonnel.find(x => x.id === l.personnelId);
+          const color = l.leaveType === 'sick' ? 'bg-rose-100 text-rose-800 border-rose-200' : 'bg-amber-100 text-amber-800 border-amber-200';
+          leavesHtml += `
+            <div class="text-[10px] truncate px-1 py-0.5 rounded border ${color} font-medium" title="${p?.firstName || 'ครู'}: ${getThaiLeaveType(l.leaveType)}">
+              ${p?.firstName || 'ครู'} (${getThaiLeaveType(l.leaveType).slice(2)})
+            </div>
+          `;
+        });
+        if (dayLeaves.length > 2) {
+          leavesHtml += `<div class="text-[9px] text-slate-400 text-center">+${dayLeaves.length - 2} รายการ</div>`;
+        }
+
+        cell.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold ${isWeekend ? (dayOfWeek === 0 ? 'text-red-500' : 'text-amber-600') : 'text-slate-700'}">${day}</span>
+            ${holiday ? `<span class="text-[9px] bg-emerald-100 text-emerald-800 px-1 rounded truncate max-w-[70px]" title="${holiday.name}">${holiday.name}</span>` : ''}
+          </div>
+          <div class="space-y-1 overflow-hidden mt-1 flex-1">
+            ${leavesHtml}
+          </div>
+        `;
+        grid.appendChild(cell);
+      }
+    }
+
+    // Render Statistics Table
+    function renderStatistics() {
+      const tbody = document.getElementById('statistics-table-body');
+      tbody.innerHTML = '';
+
+      appPersonnel.forEach(p => {
+        const myApproved = appLeaveRecords.filter(r => r.personnelId === p.id && r.status === 'approved');
+        const sickDays = myApproved.filter(r => r.leaveType === 'sick').reduce((s, r) => s + (Number(r.totalDays) || 0), 0);
+        const persDays = myApproved.filter(r => r.leaveType === 'personal').reduce((s, r) => s + (Number(r.totalDays) || 0), 0);
+        const otherDays = myApproved.filter(r => r.leaveType !== 'sick' && r.leaveType !== 'personal').reduce((s, r) => s + (Number(r.totalDays) || 0), 0);
+        const total = sickDays + persDays + otherDays;
+        const times = myApproved.length;
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50 transition';
+        tr.innerHTML = `
+          <td class="py-3 px-3 font-semibold text-slate-800">${p.prefix}${p.firstName} ${p.lastName}</td>
+          <td class="py-3 px-3 text-slate-600">${p.position}</td>
+          <td class="py-3 px-3 text-center text-rose-600 font-bold">${sickDays}</td>
+          <td class="py-3 px-3 text-center text-amber-600 font-bold">${persDays}</td>
+          <td class="py-3 px-3 text-center text-indigo-600 font-bold">${otherDays}</td>
+          <td class="py-3 px-3 text-center font-bold text-blue-700 text-sm">${total} วัน</td>
+          <td class="py-3 px-3 text-center text-slate-600">${times} ครั้ง</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function exportLeaveReportCSV() {
+      let csv = '\uFEFFชื่อ-สกุล,ตำแหน่ง,ลาป่วย (วัน),ลากิจส่วนตัว (วัน),ลาอื่นๆ (วัน),รวมวันลาทั้งหมด (วัน),จำนวนครั้งที่ลา\n';
+
+      appPersonnel.forEach(p => {
+        const myApproved = appLeaveRecords.filter(r => r.personnelId === p.id && r.status === 'approved');
+        const sickDays = myApproved.filter(r => r.leaveType === 'sick').reduce((s, r) => s + (Number(r.totalDays) || 0), 0);
+        const persDays = myApproved.filter(r => r.leaveType === 'personal').reduce((s, r) => s + (Number(r.totalDays) || 0), 0);
+        const otherDays = myApproved.filter(r => r.leaveType !== 'sick' && r.leaveType !== 'personal').reduce((s, r) => s + (Number(r.totalDays) || 0), 0);
+        const total = sickDays + persDays + otherDays;
+        const times = myApproved.length;
+
+        csv += `"${p.prefix}${p.firstName} ${p.lastName}","${p.position}",${sickDays},${persDays},${otherDays},${total},${times}\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `รายงานสถิติการลา_โรงเรียนบ้านห้วยไคร้_ปีงบประมาณ_${appSettings.currentFiscalYear || 2568}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('ดาวน์โหลดรายงาน CSV เรียบร้อยแล้ว', 'success');
+    }
+
+    // Render Audit Logs
+    function renderAuditLogs() {
+      const tbody = document.getElementById('audit-table-body');
+      tbody.innerHTML = '';
+
+      if (appAuditLogs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-slate-400">ยังไม่มีบันทึกประวัติ</td></tr>';
+        return;
+      }
+
+      appAuditLogs.forEach(log => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50 transition text-xs';
+        tr.innerHTML = `
+          <td class="py-2.5 px-3 text-slate-500 whitespace-nowrap">${log.timestamp}</td>
+          <td class="py-2.5 px-3 font-semibold text-slate-800">${log.actorName}</td>
+          <td class="py-2.5 px-3 text-slate-600">${log.actorRole}</td>
+          <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">${log.action}</span></td>
+          <td class="py-2.5 px-3 text-slate-700">${log.details}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Settings Form Handler
+    function syncSettingsFormInputs() {
+      document.getElementById('setting-school-name').value = appSettings.schoolName || '';
+      document.getElementById('setting-school-area').value = appSettings.schoolArea || '';
+      document.getElementById('setting-fiscal-year').value = appSettings.currentFiscalYear || 2568;
+      document.getElementById('setting-phone').value = appSettings.phone || '';
+      document.getElementById('setting-address').value = appSettings.address || '';
+      document.getElementById('setting-pin-code').value = appSettings.pinCode || '1234';
+      document.getElementById('setting-line-token').value = appSettings.lineChannelAccessToken || '';
+      document.getElementById('setting-line-group').value = appSettings.lineGroupId || '';
+      document.getElementById('setting-line-enabled').checked = appSettings.isLineNotifyEnabled === true || String(appSettings.isLineNotifyEnabled) === 'true';
+    }
+
+    function handleSettingsFormSubmit(e) {
+      e.preventDefault();
+      appSettings.schoolName = document.getElementById('setting-school-name').value.trim();
+      appSettings.schoolArea = document.getElementById('setting-school-area').value.trim();
+      appSettings.currentFiscalYear = Number(document.getElementById('setting-fiscal-year').value) || 2568;
+      appSettings.phone = document.getElementById('setting-phone').value.trim();
+      appSettings.address = document.getElementById('setting-address').value.trim();
+      appSettings.directorId = document.getElementById('setting-director-id').value;
+      appSettings.academicHeadId = document.getElementById('setting-academic-id').value;
+      appSettings.pinCode = document.getElementById('setting-pin-code').value.trim() || '1234';
+      appSettings.lineChannelAccessToken = document.getElementById('setting-line-token').value.trim();
+      appSettings.lineGroupId = document.getElementById('setting-line-group').value.trim();
+      appSettings.isLineNotifyEnabled = document.getElementById('setting-line-enabled').checked;
+
+      if (isGoogleAppsScript()) {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            showToast('บันทึกการตั้งค่าลง Google Sheets สำเร็จ', 'success');
+            loadInitialData(false);
+          })
+          .withFailureHandler(function(err) {
+            showToast('เกิดข้อผิดพลาด: ' + err.toString(), 'error');
+          })
+          .saveSchoolSettings(appSettings);
+      } else {
+        localStorage.setItem('gas_leave_settings', JSON.stringify(appSettings));
+        showToast('บันทึกการตั้งค่าเรียบร้อยแล้ว', 'success');
+        applyLoadedData();
+      }
+    }
+
+    function testLineNotifyConnection() {
+      const token = document.getElementById('setting-line-token').value.trim();
+      const group = document.getElementById('setting-line-group').value.trim();
+
+      if (!token) {
+        showToast('กรุณากรอก LINE Token ก่อนทดสอบ', 'error');
+        return;
+      }
+
+      showToast('กำลังทดสอบส่งข้อความเข้า LINE...', 'info');
+
+      if (isGoogleAppsScript()) {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (res && res.success) {
+              showToast('ส่งข้อความทดสอบเข้า LINE เรียบร้อยแล้ว', 'success');
+            } else {
+              showToast('ไม่สามารถส่งได้: ' + (res.error || 'Token ไม่ถูกต้อง'), 'error');
+            }
+          })
+          .withFailureHandler(function(err) {
+            showToast('ข้อผิดพลาด: ' + err.toString(), 'error');
+          })
+          .testLineNotification(token, group);
+      } else {
+        setTimeout(() => {
+          showToast('ทดสอบการเชื่อมต่อจำลองสำเร็จ (พร้อมใช้งานเมื่อใส่ใน Google Apps Script)', 'success');
+        }, 800);
+      }
+    }
+
+    // PIN Verification
+    function openPinModal() {
+      document.getElementById('pin-input').value = '';
+      document.getElementById('pin-modal').classList.remove('hidden');
+      setTimeout(() => document.getElementById('pin-input').focus(), 100);
+    }
+
+    function closePinModal() {
+      document.getElementById('pin-modal').classList.add('hidden');
+      pendingProtectedTab = null;
+    }
+
+    function verifyPinCode() {
+      const entered = document.getElementById('pin-input').value.trim();
+      const currentPin = appSettings.pinCode || '1234';
+
+      if (entered === currentPin) {
+        isPinUnlocked = true;
+        closePinModal();
+        showToast('ปลดล็อกความปลอดภัยสำเร็จ', 'success');
+        if (pendingProtectedTab) {
+          switchTab(pendingProtectedTab);
+        }
+      } else {
+        showToast('รหัส PIN ไม่ถูกต้อง (ค่าเริ่มต้น: 1234)', 'error');
+        document.getElementById('pin-input').value = '';
+        document.getElementById('pin-input').focus();
+      }
+    }
+
+    // Switch User Modal
+    function openSwitchUserModal() {
+      const list = document.getElementById('switch-user-list');
+      list.innerHTML = '';
+
+      appPersonnel.forEach(p => {
+        const isCurrent = p.id === currentUserId;
+        const btn = document.createElement('button');
+        btn.onclick = () => selectActiveUser(p.id);
+        btn.className = `w-full text-left p-3.5 rounded-2xl border transition flex items-center justify-between ${
+          isCurrent ? 'bg-blue-50 border-blue-600 ring-2 ring-blue-500' : 'bg-white border-slate-200 hover:bg-slate-50'
+        }`;
+        btn.innerHTML = `
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-blue-700 text-white font-bold flex items-center justify-center text-sm">
+              ${p.firstName.charAt(0)}
+            </div>
+            <div>
+              <h4 class="font-bold text-slate-800 text-xs sm:text-sm">${p.prefix}${p.firstName} ${p.lastName}</h4>
+              <p class="text-[11px] text-blue-600">${p.position} ${p.academicStanding ? '(' + p.academicStanding + ')' : ''}</p>
+            </div>
+          </div>
+          ${isCurrent ? '<span class="text-xs font-bold text-blue-600"><i class="fa-solid fa-check"></i> ใช้งานอยู่</span>' : ''}
+        `;
+        list.appendChild(btn);
+      });
+
+      document.getElementById('switch-user-modal').classList.remove('hidden');
+    }
+
+    function closeSwitchUserModal() {
+      document.getElementById('switch-user-modal').classList.add('hidden');
+    }
+
+    function selectActiveUser(userId) {
+      currentUserId = userId;
+      closeSwitchUserModal();
+      applyLoadedData();
+      showToast(`สลับผู้ใช้เป็น: ${getCurrentUser().prefix}${getCurrentUser().firstName} เรียบร้อยแล้ว`, 'info');
+    }
+
+    // Helper Formatters
+    function getThaiLeaveType(type) {
+      switch (type) {
+        case 'sick': return 'ลาป่วย';
+        case 'personal': return 'ลากิจส่วนตัว';
+        case 'maternity': return 'ลาคลอดบุตร';
+        case 'ordination': return 'ลาอุปสมบทหรือพิธีฮัจญ์';
+        case 'wife_delivery': return 'ลาช่วยภริยาคลอดบุตร';
+        case 'military': return 'ลาเตรียมพลทหาร';
+        default: return 'ลาประเภทอื่นๆ';
+      }
+    }
+
+    function getLeaveTypeBadge(type) {
+      switch (type) {
+        case 'sick':
+          return '<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200"><i class="fa-solid fa-notes-medical mr-1 text-[10px]"></i>ลาป่วย</span>';
+        case 'personal':
+          return '<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200"><i class="fa-solid fa-briefcase mr-1 text-[10px]"></i>ลากิจส่วนตัว</span>';
+        case 'maternity':
+          return '<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-pink-50 text-pink-700 border border-pink-200"><i class="fa-solid fa-baby mr-1 text-[10px]"></i>ลาคลอดบุตร</span>';
+        default:
+          return '<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">ลาอื่นๆ</span>';
+      }
+    }
+
+    function getStatusBadge(status) {
+      switch (status) {
+        case 'pending_academic':
+          return '<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-300">รอวิชาการ</span>';
+        case 'pending_director':
+          return '<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800 border border-indigo-300">รอ ผอ. อนุมัติ</span>';
+        case 'approved':
+          return '<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300"><i class="fa-solid fa-circle-check mr-1 text-[10px]"></i>อนุมัติแล้ว</span>';
+        case 'rejected':
+          return '<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800 border border-rose-300"><i class="fa-solid fa-circle-xmark mr-1 text-[10px]"></i>ไม่อนุมัติ</span>';
+        case 'cancelled':
+          return '<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-300">ยกเลิกแล้ว</span>';
+        default:
+          return '<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">-</span>';
+      }
+    }
+
+    function formatThaiDate(dateStr) {
+      if (!dateStr) return '-';
+      const parts = dateStr.split('-');
+      if (parts.length < 3) return dateStr;
+      const day = parseInt(parts[2], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const year = parseInt(parts[0], 10) + 543;
+      return `${day} ${getThaiMonthShort(month)} ${year}`;
+    }
+
+    function formatThaiDateTime(isoStr) {
+      if (!isoStr) return '-';
+      const d = new Date(isoStr);
+      return `${d.getDate()} ${getThaiMonthShort(d.getMonth())} ${d.getFullYear() + 543} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')} น.`;
+    }
+
+    function getThaiMonthName(m) {
+      const months = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+      return months[m] || '';
+    }
+
+    function getThaiMonthShort(m) {
+      const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+      return months[m] || '';
+    }
+
+    // Toast Notification System
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+
+      let icon = 'fa-circle-info';
+      let colors = 'bg-slate-900 text-white';
+      if (type === 'success') {
+        icon = 'fa-circle-check text-emerald-400';
+        colors = 'bg-slate-900 text-white border-l-4 border-emerald-500';
+      } else if (type === 'error') {
+        icon = 'fa-circle-exclamation text-rose-400';
+        colors = 'bg-slate-900 text-white border-l-4 border-rose-500';
+      } else if (type === 'info') {
+        icon = 'fa-circle-info text-blue-400';
+        colors = 'bg-slate-900 text-white border-l-4 border-blue-500';
+      }
+
+      toast.className = `p-3.5 rounded-2xl shadow-xl flex items-center space-x-3 text-xs sm:text-sm transition-all duration-300 transform translate-y-2 opacity-0 ${colors}`;
+      toast.innerHTML = `
+        <i class="fa-solid ${icon} text-base flex-shrink-0"></i>
+        <span class="font-medium">${message}</span>
+      `;
+      container.appendChild(toast);
+
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-x-full');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+  </script>
+</body>
+</html>
