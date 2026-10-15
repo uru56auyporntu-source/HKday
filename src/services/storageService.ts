@@ -413,6 +413,26 @@ function doPost(e) {
         r.academicHeadComment || "",
         r.directorComment || ""
       ]);
+    } else if (action === "send_line") {
+      var token = requestData.token;
+      var to = requestData.to;
+      var msg = requestData.message;
+      if (token && to && msg) {
+        UrlFetchApp.fetch("https://api.line.me/v2/bot/message/push", {
+          method: "post",
+          contentType: "application/json",
+          headers: { "Authorization": "Bearer " + token.trim() },
+          payload: JSON.stringify({
+            to: to.trim(),
+            messages: [{ type: "text", text: msg }]
+          }),
+          muteHttpExceptions: true
+        });
+      }
+      return ContentService.createTextOutput(JSON.stringify({
+        status: "success",
+        message: "ส่งข้อความเข้ากลุ่ม LINE เรียบร้อยแล้ว"
+      })).setMimeType(ContentService.MimeType.JSON);
     }
 
     return ContentService.createTextOutput(JSON.stringify({
@@ -429,7 +449,7 @@ function doPost(e) {
 }
 `;
 
-// Sync with Google Sheets Web App endpoint via Server Proxy (avoids CORS)
+// Sync with Google Sheets Web App endpoint via Server Proxy or direct fetch
 export const syncWithGoogleSheets = async (
   webhookUrl: string, 
   records: LeaveRecord[], 
@@ -471,43 +491,50 @@ export const syncWithGoogleSheets = async (
   };
 
   try {
-    // 1. Try server proxy first (bypasses browser CORS and reads actual response)
-    const proxyRes = await fetch('/api/cloud-sync', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        url: webhookUrl.trim(),
-        serviceType: 'Google Sheets',
-        payload
-      })
-    });
-
-    const data = await proxyRes.json();
-    return {
-      success: data.success,
-      message: data.message || (data.success ? 'ส่งข้อมูลบันทึกลง Google Sheets สำเร็จเรียบร้อยแล้ว' : 'ส่งข้อมูลไม่สำเร็จ')
-    };
-  } catch {
-    // 2. Direct browser fallback using mode 'no-cors'
-    try {
-      await fetch(webhookUrl.trim(), {
+    // 1. Try server proxy first if not running on static hosting
+    if (!isStaticHosting()) {
+      const proxyRes = await fetch('/api/cloud-sync', {
         method: 'POST',
-        mode: 'no-cors',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+          url: webhookUrl.trim(),
+          serviceType: 'Google Sheets',
+          payload
+        })
       });
 
-      return { 
-        success: true, 
-        message: 'ส่งข้อมูลบันทึกลง Google Sheets สำเร็จเรียบร้อยแล้ว' 
-      };
-    } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
-      return { 
-        success: false, 
-        message: `เกิดข้อผิดพลาดในการเชื่อมต่อ Google Sheets: ${errorMsg}` 
-      };
+      const contentType = proxyRes.headers.get('content-type') || '';
+      if (proxyRes.ok && contentType.includes('application/json')) {
+        const data = await proxyRes.json();
+        return {
+          success: data.success,
+          message: data.message || (data.success ? 'ส่งข้อมูลบันทึกลง Google Sheets สำเร็จเรียบร้อยแล้ว' : 'ส่งข้อมูลไม่สำเร็จ')
+        };
+      }
     }
+  } catch {
+    // Fall through to direct fetch
+  }
+
+  // 2. Direct browser fetch to Google Apps Script
+  try {
+    await fetch(webhookUrl.trim(), {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    });
+
+    return { 
+      success: true, 
+      message: 'ส่งข้อมูลบันทึกลง Google Sheets สำเร็จเรียบร้อยแล้ว' 
+    };
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    return { 
+      success: false, 
+      message: `เกิดข้อผิดพลาดในการเชื่อมต่อ Google Sheets: ${errorMsg}` 
+    };
   }
 };
 
@@ -582,7 +609,7 @@ export const sendLineNotification = async (
   messageText: string
 ): Promise<{ success: boolean; message: string }> => {
   if (!settings.isLineNotifyEnabled) {
-    return { success: false, message: 'ระบบแจ้งเตือน LINE ปิดการใช้งานอยู่' };
+    return { success: false, message: 'ระบบแจ้งเตือน LINE ปิดการใช้งานอยู่ (กรุณาเปิดสวิตช์ใช้งานในการตั้งค่า)' };
   }
 
   const token = settings.lineChannelAccessToken?.trim();
@@ -592,6 +619,47 @@ export const sendLineNotification = async (
     return { success: false, message: 'ยังไม่ได้ระบุ Channel Access Token หรือ Group ID' };
   }
 
+  // 1. If Google Apps Script Webhook URL is configured:
+  // Forward via Google Apps Script (Works anywhere including GitHub Pages with ZERO CORS errors!)
+  if (settings.googleSheetsWebhookUrl && settings.googleSheetsWebhookUrl.trim().startsWith('http')) {
+    try {
+      const gasRes = await fetch(settings.googleSheetsWebhookUrl.trim(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          action: 'send_line',
+          token,
+          to,
+          message: messageText
+        })
+      });
+
+      try {
+        const gasData = await gasRes.json();
+        return {
+          success: gasData.success !== false && gasData.status !== 'error',
+          message: gasData.message || 'ส่งข้อความแจ้งเตือนเข้ากลุ่ม LINE ผ่าน Google Apps Script เรียบร้อยแล้ว'
+        };
+      } catch {
+        return {
+          success: true,
+          message: 'ส่งคำขอแจ้งเตือนไปยัง Google Apps Script เพื่อส่งเข้า LINE เรียบร้อยแล้ว'
+        };
+      }
+    } catch (gasErr: unknown) {
+      console.warn('Google Apps Script proxy failed, falling back to local proxy...', gasErr);
+    }
+  }
+
+  // 2. If running on GitHub Pages (static hosting) and no Google Apps Script Webhook URL is set:
+  if (isStaticHosting()) {
+    return {
+      success: false,
+      message: 'บน GitHub Pages (Static Hosting) ไม่มีเซิร์ฟเวอร์ Node.js กรุณานำ URL ของ Google Apps Script Web App ไปกรอกในเมนู "เชื่อมต่อ Google Sheets" เพื่อให้ระบบส่งข้อความเข้า LINE ผ่าน Google Script ได้โดยไม่ติดปัญหา CORS'
+    };
+  }
+
+  // 3. Fallback to Express backend server route (/api/line-notify)
   try {
     const res = await fetch('/api/line-notify', {
       method: 'POST',
@@ -605,10 +673,18 @@ export const sendLineNotification = async (
       })
     });
 
+    const contentType = res.headers.get('content-type') || '';
+    if (!res.ok || !contentType.includes('application/json')) {
+      return {
+        success: false,
+        message: `เซิร์ฟเวอร์ตอบกลับรหัส ${res.status}: กรุณาระบุ Google Apps Script Webhook URL ในเมนูเชื่อมต่อ Google Sheets`
+      };
+    }
+
     const data = await res.json();
     return {
       success: data.success,
-      message: data.message || (data.success ? 'ส่งข้อความแจ้งเตือนสำเร็จ' : 'ส่งข้อความไม่สำเร็จ')
+      message: data.message || (data.success ? 'ส่งข้อความแจ้งเตือนเข้ากลุ่ม LINE เรียบร้อยแล้ว' : 'ส่งข้อความไม่สำเร็จ')
     };
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : String(err);

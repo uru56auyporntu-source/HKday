@@ -252,6 +252,17 @@ function doPost(e) {
               </label>
             </div>
 
+            {/* Info for GitHub Pages users */}
+            {typeof window !== 'undefined' && window.location.hostname.endsWith('github.io') && (
+              <div className="p-3.5 bg-blue-50 border border-blue-200 rounded-2xl text-xs text-blue-900 flex items-start gap-2.5">
+                <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                <div className="leading-relaxed">
+                  <span className="font-bold">คำแนะนำสำหรับ GitHub Pages:</span><br/>
+                  เนื่องจาก LINE API บล็อกการส่งข้อความตรงจากเว็บเบราว์เซอร์ (ติดปัญหา Browser CORS) และ GitHub Pages ไม่มี Node.js เซิร์ฟเวอร์ กรุณาระบุ <strong>Google Apps Script Web App URL</strong> ในเมนู <strong>"เชื่อมต่อ Google Sheets"</strong> ระบบจะส่งข้อความแจ้งเตือนผ่าน Google Apps Script เข้ากลุ่ม LINE ได้สำเร็จ 100%!
+                </div>
+              </div>
+            )}
+
             {/* Channel Access Token */}
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">

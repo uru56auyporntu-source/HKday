@@ -48,6 +48,13 @@ function doPost(e) {
       var res = submitLeaveRecord(payload.data);
       return ContentService.createTextOutput(JSON.stringify(res))
         .setMimeType(ContentService.MimeType.JSON);
+    } else if (action === 'send_line' || action === 'line_notify') {
+      var token = payload.token || '';
+      var to = payload.to || payload.groupId || '';
+      var msg = payload.message || '';
+      var lineRes = sendLineNotification(msg, token, to);
+      return ContentService.createTextOutput(JSON.stringify(lineRes))
+        .setMimeType(ContentService.MimeType.JSON);
     }
 
     return ContentService.createTextOutput(JSON.stringify({ success: true, message: 'Google Apps Script Web App พร้อมทำงาน' }))
