@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <title>กำลังเปลี่ยนเส้นทาง...</title>
+  <script>
+    // GitHub Pages SPA redirect
+    var path = window.location.pathname;
+    var repo = '/HKday';
+    if (!path.endsWith('/')) {
+      window.location.replace(window.location.origin + path + '/' + window.location.search + window.location.hash);
+    } else {
+      window.location.replace(window.location.origin + repo + '/');
+    }
+  </script>
+</head>
+<body>
+  <p>กำลังโหลดระบบจัดการวันลา...</p>
+</body>
+</html>

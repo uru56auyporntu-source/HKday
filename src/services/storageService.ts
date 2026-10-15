@@ -511,6 +511,14 @@ export const syncWithGoogleSheets = async (
   }
 };
 
+// Helper: Check if running on static hosting without backend (e.g. GitHub Pages)
+const isStaticHosting = () => {
+  if (typeof window === 'undefined') return false;
+  return window.location.hostname.endsWith('github.io') || 
+         window.location.protocol === 'file:' || 
+         window.location.hostname === 'localhost' && window.location.port !== '3000';
+};
+
 // Fetch central database from server (for cross-device instant sync)
 export const fetchDatabaseFromServer = async (): Promise<{
   personnelList?: Personnel[];
@@ -519,6 +527,10 @@ export const fetchDatabaseFromServer = async (): Promise<{
   auditLogs?: AuditLog[];
   updatedAt?: string;
 } | null> => {
+  if (isStaticHosting()) {
+    // Pure static hosting (e.g. GitHub Pages) uses LocalStorage without server API
+    return null;
+  }
   try {
     const res = await fetch('/api/database');
     if (!res.ok) return null;
@@ -536,6 +548,13 @@ export const syncDatabaseToServer = async (payload: {
   settings: SchoolSettings;
   auditLogs: AuditLog[];
 }): Promise<{ success: boolean; message: string; updatedAt?: string }> => {
+  if (isStaticHosting()) {
+    return {
+      success: true,
+      message: 'บันทึกใน LocalStorage เรียบร้อย (โหมด Static Hosting)',
+      updatedAt: new Date().toISOString()
+    };
+  }
   try {
     const res = await fetch('/api/database', {
       method: 'POST',

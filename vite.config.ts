@@ -4,8 +4,13 @@ import path from 'path';
 import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
+  // Use repository subpath for GitHub Pages if available, otherwise relative './'
+  const base = process.env.GITHUB_REPOSITORY 
+    ? `/${process.env.GITHUB_REPOSITORY.split('/')[1]}/` 
+    : './';
+
   return {
-    base: './',
+    base,
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
